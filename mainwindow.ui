@@ -32,6 +32,9 @@
     </property>
     <item>
      <layout class="QHBoxLayout" name="ButtonViewLayout">
+      <property name="spacing">
+       <number>3</number>
+      </property>
       <item>
        <widget class="QPushButton" name="UploadBankCSVButton">
         <property name="sizePolicy">
@@ -54,6 +57,44 @@
         </property>
         <property name="text">
          <string notr="true">Upload Bank File</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="ReviewBillsButton">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>100</width>
+          <height>20</height>
+         </size>
+        </property>
+        <property name="text">
+         <string notr="true">Review Bills</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="AddBillsButton">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>100</width>
+          <height>20</height>
+         </size>
+        </property>
+        <property name="text">
+         <string notr="true">Add Bills</string>
         </property>
        </widget>
       </item>

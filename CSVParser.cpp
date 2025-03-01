@@ -7,7 +7,7 @@ using namespace CSV;
 namespace
 {
 // Debit is subtract, Credit is add
-const QVector<QString> COLUMN_NAMES = { "Account", "Debit", "Credit", "Balance", "Date", "Description" };
+const QVector<QString> TRANSACTION_COLUMN_NAMES = { "Account", "Debit", "Credit", "Balance", "Date", "Description" };
 }
 
 CSVParser::CSVParser(QObject *parent)
@@ -15,7 +15,7 @@ CSVParser::CSVParser(QObject *parent)
 {
 }
 // In Retrospec, making this a public function is probably a better move, but hey
-QVector<Transaction> CSVParser::ParseCSV(const QString& filePath)
+QVector<Transaction> CSVParser::ParseTransactionCSV(const QString& filePath)
 {
     QVector<Transaction> parsedTransactions;
     QFile csv(filePath);
@@ -44,7 +44,7 @@ QVector<Transaction> CSVParser::ParseCSV(const QString& filePath)
                     {
                         QVector<QString> keys = columnIndices.keys().toVector();
                         bool columnVerificationPassed = true;
-                        for(const QString& col : COLUMN_NAMES)
+                        for(const QString& col : TRANSACTION_COLUMN_NAMES)
                         {
                             if(!keys.contains(col))
                             {
@@ -63,12 +63,12 @@ QVector<Transaction> CSVParser::ParseCSV(const QString& filePath)
                         }
                     }
                     // Build Transaction Objects and append to QVector
-                    parsedTransactions.push_back(Transaction(lineData[columnIndices.value(COLUMN_NAMES[0])].trimmed(), /*Acct*/
-                                                             lineData[columnIndices.value(COLUMN_NAMES[1])].trimmed(), /*Debit*/
-                                                             lineData[columnIndices.value(COLUMN_NAMES[2])].trimmed(), /*Credit*/
-                                                             lineData[columnIndices.value(COLUMN_NAMES[3])].trimmed(), /*Balance*/
-                                                             lineData[columnIndices.value(COLUMN_NAMES[4])].trimmed(), /*Date*/
-                                                             lineData[columnIndices.value(COLUMN_NAMES[5])].trimmed() /*Desc*/
+                    parsedTransactions.push_back(Transaction(lineData[columnIndices.value(TRANSACTION_COLUMN_NAMES[0])].trimmed(), /*Acct*/
+                                                             lineData[columnIndices.value(TRANSACTION_COLUMN_NAMES[1])].trimmed(), /*Debit*/
+                                                             lineData[columnIndices.value(TRANSACTION_COLUMN_NAMES[2])].trimmed(), /*Credit*/
+                                                             lineData[columnIndices.value(TRANSACTION_COLUMN_NAMES[3])].trimmed(), /*Balance*/
+                                                             lineData[columnIndices.value(TRANSACTION_COLUMN_NAMES[4])].trimmed(), /*Date*/
+                                                             lineData[columnIndices.value(TRANSACTION_COLUMN_NAMES[5])].trimmed() /*Desc*/
                                                              ));
                 }
 

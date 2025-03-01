@@ -23,11 +23,14 @@ namespace mainSpace
 
     private slots:
         void OnUploadBankCSVButtonClicked();
+        void OnAddBillsButtonClicked();
+        void HandleBillAdded(const QString& desc, const QString& ammt);
 
     private:
         QString OpenFileDialog();
         void PopulateDataTableWithTransactions(const QVector<CSV::Transaction>& transactions);
 
         Ui::MainWindow *ui;
+        QVector<CSV::Transaction> LatestTransactions;
     };
 }

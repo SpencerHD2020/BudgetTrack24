@@ -1,3 +1,4 @@
+#include "BillAdderWidget.h"
 #include "CSVParser.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -5,6 +6,8 @@
 #include <QFileDialog>
 #include <QStandardItemModel>
 #include <QTableView>
+
+#include <iostream>
 
 using namespace mainSpace;
 using namespace CSV;
@@ -19,6 +22,11 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     connect(ui->UploadBankCSVButton, &QPushButton::clicked, this, &MainWindow::OnUploadBankCSVButtonClicked, Qt::UniqueConnection);
+    connect(ui->AddBillsButton, &QPushButton::clicked, this, &MainWindow::OnAddBillsButtonClicked, Qt::UniqueConnection);
+    // TODO: We will want to query active bills on constuct (or on show breakdown whatever if not loaded) so that we can calculate for that step
+
+
+    //ReviewBillsButton
 }
 
 MainWindow::~MainWindow()
@@ -32,10 +40,10 @@ void MainWindow::OnUploadBankCSVButtonClicked()
     if(!filePath.isEmpty())
     {
         CSVParser csvParser(nullptr);
-        QVector<Transaction> transactions = csvParser.ParseCSV(filePath);
-        if(!transactions.isEmpty())
+        LatestTransactions = csvParser.ParseTransactionCSV(filePath);
+        if(!LatestTransactions.isEmpty())
         {
-            PopulateDataTableWithTransactions(transactions);
+            PopulateDataTableWithTransactions(LatestTransactions);
         }
     }
 }
@@ -63,4 +71,18 @@ void MainWindow::PopulateDataTableWithTransactions(const QVector<Transaction>& t
     ui->DataTableView->setModel(model);
     ui->DataTableView->resizeColumnsToContents();
     ui->DataTableView->resizeRowsToContents();
+}
+
+void MainWindow::OnAddBillsButtonClicked()
+{
+    // TODO: SN: Create and Show Dialog that will update CSV File with bills
+    Bills::BillAdderWidget* billAdder = new Bills::BillAdderWidget();
+    connect(billAdder, &Bills::BillAdderWidget::NotifyBillAdded, this, &MainWindow::HandleBillAdded, Qt::UniqueConnection);
+    billAdder->show();
+}
+
+void MainWindow::HandleBillAdded(const QString& desc, const QString& ammt)
+{
+    std::cout << "Bill Added, desc: " << desc.toStdString() << std::endl;
+    std::cout << "Bill Added, ammt: " << ammt.toStdString() << std::endl;
 }
