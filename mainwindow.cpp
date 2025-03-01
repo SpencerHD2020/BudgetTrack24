@@ -1,5 +1,4 @@
 #include "BillAdderWidget.h"
-#include "CSVParser.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QDebug>
@@ -19,6 +18,7 @@ namespace
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
+    , CSVParserInstance(nullptr)
 {
     ui->setupUi(this);
     connect(ui->UploadBankCSVButton, &QPushButton::clicked, this, &MainWindow::OnUploadBankCSVButtonClicked, Qt::UniqueConnection);
@@ -39,8 +39,7 @@ void MainWindow::OnUploadBankCSVButtonClicked()
     QString filePath = OpenFileDialog();
     if(!filePath.isEmpty())
     {
-        CSVParser csvParser(nullptr);
-        LatestTransactions = csvParser.ParseTransactionCSV(filePath);
+        LatestTransactions = CSVParserInstance.ParseTransactionCSV(filePath);
         if(!LatestTransactions.isEmpty())
         {
             PopulateDataTableWithTransactions(LatestTransactions);
@@ -57,7 +56,7 @@ void MainWindow::PopulateDataTableWithTransactions(const QVector<Transaction>& t
 {
     QStandardItemModel* model = new QStandardItemModel(transactions.length(), TRANSACTIONS_COL_LEN);
     model->setHorizontalHeaderLabels({"Account", "Debit", "Credit", "Balance", "Date", "Description"});
-    for (int row = 0; row < transactions.size(); ++row)
+    for(int row = 0; row < transactions.size(); ++row)
     {
         const Transaction& t = transactions[row];
         model->setItem(row, 0, new QStandardItem(t.Account));
@@ -82,7 +81,27 @@ void MainWindow::OnAddBillsButtonClicked()
 
 void MainWindow::HandleBillAdded(const QString& desc, const QString& ammt)
 {
-    CSVParser csvParser(nullptr);
-    csvParser.AddBill(desc, ammt);
-    // TODO: SN: Show Bills View
+    CSVParserInstance.AddBill(desc, ammt);
+    ShowBillsView();
+}
+
+void MainWindow::ShowBillsView()
+{
+    // TODO: SN: Similiar to Transactions, I debate if we need to start caching this, could cache in the parser, so we know it has the last time called values
+    QMap<QString, QString> bills = CSVParserInstance.GetAllBills();
+    if(!bills.empty())
+    {
+        QStandardItemModel* model = new QStandardItemModel(bills.size(), 2);
+        model->setHorizontalHeaderLabels({"Desc", "Ammnt"});
+        int rowCount = 0;
+        for(auto it = bills.constBegin(); it != bills.constEnd(); ++it)
+        {
+            model->setItem(rowCount, 0, new QStandardItem(it.key()));
+            model->setItem(rowCount, 1, new QStandardItem(it.value()));
+            ++rowCount;
+        }
+        ui->DataTableView->setModel(model);
+        ui->DataTableView->resizeColumnsToContents();
+        ui->DataTableView->resizeRowsToContents();
+    }
 }

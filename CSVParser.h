@@ -33,6 +33,7 @@ namespace CSV
         explicit CSVParser(QObject *parent = nullptr);
         QVector<Transaction> ParseTransactionCSV(const QString& filePath);
         void AddBill(const QString& desc, const QString& ammt);
+        QMap<QString, QString> GetAllBills();
 
     private:
         void EnsureAppDatafolderExists();

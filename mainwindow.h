@@ -1,3 +1,4 @@
+#include "CSVParser.h"
 #include <QMainWindow>
 
 namespace Ui
@@ -25,6 +26,7 @@ namespace mainSpace
         void OnUploadBankCSVButtonClicked();
         void OnAddBillsButtonClicked();
         void HandleBillAdded(const QString& desc, const QString& ammt);
+        void ShowBillsView();
 
     private:
         QString OpenFileDialog();
@@ -32,5 +34,6 @@ namespace mainSpace
 
         Ui::MainWindow *ui;
         QVector<CSV::Transaction> LatestTransactions;
+        CSV::CSVParser CSVParserInstance;
     };
 }

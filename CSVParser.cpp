@@ -121,3 +121,28 @@ void CSVParser::CreateEmptyBillsCSV()
         billsCSV.close();
     }
 }
+
+QMap<QString, QString> CSVParser::GetAllBills() /* Desc, Ammt */
+{
+    QMap<QString, QString> bills;
+    EnsureAppDatafolderExists();
+    QFile billsCSV(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + QDir::separator() + APP_DATA_DIR_NAME + QDir::separator() + BILLS_CSV_NAME);
+    if(billsCSV.exists())
+    {
+        if(billsCSV.open(QIODevice::ReadOnly | QIODevice::Text))
+        {
+            QTextStream in(&billsCSV);
+            int lineCount = 0;
+            while(!in.atEnd())
+            {
+                QStringList lineData = in.readLine().split(",");
+                if(lineCount > 0)
+                {
+                    bills.insert(lineData[0].trimmed(), lineData[1].trimmed());
+                }
+                ++lineCount;
+            }
+        }
+    }
+    return bills;
+}
