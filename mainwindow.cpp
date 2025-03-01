@@ -37,12 +37,7 @@ void MainWindow::OnUploadBankCSVButtonClicked()
         if(!transactions.isEmpty())
         {
             // TODO: Fill UI Table
-            for(const Transaction& trans : transactions)
-            {
-                qDebug() << trans.Desc;
 
-                std::cout << trans.Desc.toStdString() << std::endl;
-            }
         }
     }
 }
