@@ -6,8 +6,6 @@
 #include <QStandardItemModel>
 #include <QTableView>
 
-#include <iostream>
-
 using namespace mainSpace;
 using namespace CSV;
 namespace
@@ -23,10 +21,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     connect(ui->UploadBankCSVButton, &QPushButton::clicked, this, &MainWindow::OnUploadBankCSVButtonClicked, Qt::UniqueConnection);
     connect(ui->AddBillsButton, &QPushButton::clicked, this, &MainWindow::OnAddBillsButtonClicked, Qt::UniqueConnection);
+    connect(ui->ReviewBillsButton, &QPushButton::clicked, this, &MainWindow::ShowBillsView, Qt::UniqueConnection);
     // TODO: We will want to query active bills on constuct (or on show breakdown whatever if not loaded) so that we can calculate for that step
-
-
-    //ReviewBillsButton
 }
 
 MainWindow::~MainWindow()
