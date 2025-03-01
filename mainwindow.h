@@ -20,7 +20,6 @@ namespace mainSpace
         void OnUploadBankCSVButtonClicked();
 
     private:
-        void ParseCSV(const QString& filePath);
         QString OpenFileDialog();
 
         Ui::MainWindow *ui;

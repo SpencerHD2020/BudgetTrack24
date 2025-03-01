@@ -30,11 +30,7 @@ namespace CSV
     {
         Q_OBJECT
     public:
-        explicit CSVParser(const QString csvPath, QObject *parent = nullptr);
-
-
-
-    private:
-        void ParseCSV(QFile& file);
+        explicit CSVParser(QObject *parent = nullptr);
+        QVector<Transaction> ParseCSV(const QString& filePath);
     };
 }
