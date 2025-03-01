@@ -5,6 +5,11 @@ namespace Ui
     class MainWindow;
 }
 
+namespace CSV
+{
+    struct Transaction;
+}
+
 namespace mainSpace
 {
     class MainWindow : public QMainWindow
@@ -21,6 +26,7 @@ namespace mainSpace
 
     private:
         QString OpenFileDialog();
+        void PopulateDataTableWithTransactions(const QVector<CSV::Transaction>& transactions);
 
         Ui::MainWindow *ui;
     };
