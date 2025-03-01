@@ -75,7 +75,6 @@ void MainWindow::PopulateDataTableWithTransactions(const QVector<Transaction>& t
 
 void MainWindow::OnAddBillsButtonClicked()
 {
-    // TODO: SN: Create and Show Dialog that will update CSV File with bills
     Bills::BillAdderWidget* billAdder = new Bills::BillAdderWidget();
     connect(billAdder, &Bills::BillAdderWidget::NotifyBillAdded, this, &MainWindow::HandleBillAdded, Qt::UniqueConnection);
     billAdder->show();
@@ -83,6 +82,7 @@ void MainWindow::OnAddBillsButtonClicked()
 
 void MainWindow::HandleBillAdded(const QString& desc, const QString& ammt)
 {
-    std::cout << "Bill Added, desc: " << desc.toStdString() << std::endl;
-    std::cout << "Bill Added, ammt: " << ammt.toStdString() << std::endl;
+    CSVParser csvParser(nullptr);
+    csvParser.AddBill(desc, ammt);
+    // TODO: SN: Show Bills View
 }

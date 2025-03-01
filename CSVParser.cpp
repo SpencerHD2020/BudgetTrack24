@@ -1,13 +1,17 @@
 #include "CSVParser.h"
+#include <QDir>
 #include <QMap>
 #include <QTextStream>
+#include <QStandardPaths>
 #include <QStringList>
 
 using namespace CSV;
 namespace
 {
-// Debit is subtract, Credit is add
-const QVector<QString> TRANSACTION_COLUMN_NAMES = { "Account", "Debit", "Credit", "Balance", "Date", "Description" };
+    // Debit is subtract, Credit is add
+    const QVector<QString> TRANSACTION_COLUMN_NAMES = { "Account", "Debit", "Credit", "Balance", "Date", "Description" };
+    const QString APP_DATA_DIR_NAME = "BudgetTrack";
+    const QString BILLS_CSV_NAME = "bills.csv";
 }
 
 CSVParser::CSVParser(QObject *parent)
@@ -77,5 +81,43 @@ QVector<Transaction> CSVParser::ParseTransactionCSV(const QString& filePath)
             //TODO: Need to see what debit/credit are like in CSV when not present
         }
     }
+    csv.close();
     return parsedTransactions;
+}
+
+void CSVParser::AddBill(const QString& desc, const QString& ammt)
+{
+    EnsureAppDatafolderExists();
+    QFile billsCSV(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + QDir::separator() + APP_DATA_DIR_NAME + QDir::separator() + BILLS_CSV_NAME);
+    if(!billsCSV.exists())
+    {
+        CreateEmptyBillsCSV();
+    }
+    if(billsCSV.open(QIODevice::Append | QIODevice::Text))
+    {
+        QTextStream stream(&billsCSV);
+        stream << desc.trimmed() << "," << ammt.trimmed() << "\n";
+        billsCSV.close();
+    }
+}
+
+void CSVParser::EnsureAppDatafolderExists()
+{
+    QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + QDir::separator() + APP_DATA_DIR_NAME;
+    QDir appDataDir(path);
+    if(!appDataDir.exists())
+    {
+        appDataDir.mkpath(path);
+    }
+}
+
+void CSVParser::CreateEmptyBillsCSV()
+{
+    QFile billsCSV(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + QDir::separator() + APP_DATA_DIR_NAME + QDir::separator() + BILLS_CSV_NAME);
+    if(billsCSV.open(QIODevice::WriteOnly))
+    {
+        QTextStream stream(&billsCSV);
+        stream << "Desc,Ammt\n";
+        billsCSV.close();
+    }
 }
