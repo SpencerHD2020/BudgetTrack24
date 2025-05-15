@@ -14,6 +14,11 @@ namespace
     const QString BILLS_CSV_NAME = "bills.csv";
 }
 
+
+
+// TODO: SN: Maybe we should store [From Transaction Bank Data] the last 2-3 Transactions
+//      in app data so when a new file is uploaded. We can pick up where we left off.
+
 CSVParser::CSVParser(QObject *parent)
     : QObject{parent}
 {
@@ -21,7 +26,6 @@ CSVParser::CSVParser(QObject *parent)
 // In Retrospec, making this a public function is probably a better move, but hey
 QVector<Transaction> CSVParser::ParseTransactionCSV(const QString& filePath)
 {
-    QVector<Transaction> parsedTransactions;
     QFile csv(filePath);
     if(csv.exists())
     {
@@ -67,7 +71,7 @@ QVector<Transaction> CSVParser::ParseTransactionCSV(const QString& filePath)
                         }
                     }
                     // Build Transaction Objects and append to QVector
-                    parsedTransactions.push_back(Transaction(lineData[columnIndices.value(TRANSACTION_COLUMN_NAMES[0])].trimmed(), /*Acct*/
+                    Transactions.push_back(Transaction(lineData[columnIndices.value(TRANSACTION_COLUMN_NAMES[0])].trimmed(), /*Acct*/
                                                              lineData[columnIndices.value(TRANSACTION_COLUMN_NAMES[1])].trimmed(), /*Debit*/
                                                              lineData[columnIndices.value(TRANSACTION_COLUMN_NAMES[2])].trimmed(), /*Credit*/
                                                              lineData[columnIndices.value(TRANSACTION_COLUMN_NAMES[3])].trimmed(), /*Balance*/
@@ -82,7 +86,11 @@ QVector<Transaction> CSVParser::ParseTransactionCSV(const QString& filePath)
         }
     }
     csv.close();
-    return parsedTransactions;
+
+    // TODO: SN: Whether it happens here or elsewhere, at this point we need to actually calculate new totals based on the
+    //      transaction data that we just loaded
+
+    return Transactions;
 }
 
 void CSVParser::AddBill(const QString& desc, const QString& ammt)

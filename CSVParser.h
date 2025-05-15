@@ -38,5 +38,7 @@ namespace CSV
     private:
         void EnsureAppDatafolderExists();
         void CreateEmptyBillsCSV();
+
+        QVector<Transaction> Transactions;
     };
 }

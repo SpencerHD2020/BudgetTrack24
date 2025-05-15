@@ -101,3 +101,12 @@ void MainWindow::ShowBillsView()
         ui->DataTableView->resizeRowsToContents();
     }
 }
+
+
+// Credit Card Adjustment flow will be almost exactly the same as Bills, except any logical handling
+
+void MainWindow::OnAddCCButtonClicked()
+{
+    // TODO: SN: Need to change the BillAdderWidget to be named something like Adder Widget
+    //      Then since we connect it all, we can pass to constructor all of the text to use when building the UI
+}
