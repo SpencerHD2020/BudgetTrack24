@@ -1,4 +1,4 @@
-#include "BillAdderWidget.h"
+#include "ItemAdderWidget.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QDebug>
@@ -73,8 +73,8 @@ void MainWindow::PopulateDataTableWithTransactions(const QVector<Transaction>& t
 
 void MainWindow::OnAddBillsButtonClicked()
 {
-    Bills::BillAdderWidget* billAdder = new Bills::BillAdderWidget();
-    connect(billAdder, &Bills::BillAdderWidget::NotifyBillAdded, this, &MainWindow::HandleBillAdded, Qt::UniqueConnection);
+    ItemAdder::ItemAdderWidget* billAdder = new ItemAdder::ItemAdderWidget("Add Bill");
+    connect(billAdder, &ItemAdder::ItemAdderWidget::NotifyItemAdded, this, &MainWindow::HandleBillAdded, Qt::UniqueConnection);
     billAdder->show();
 }
 
