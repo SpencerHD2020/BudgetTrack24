@@ -86,7 +86,6 @@ void MainWindow::HandleBillAdded(const QString& desc, const QString& ammt)
 
 void MainWindow::ShowBillsView()
 {
-    // TODO: SN: Similiar to Transactions, I debate if we need to start caching this, could cache in the parser, so we know it has the last time called values
     QMap<QString, QString> bills = CSVParserInstance.GetAllBills();
     if(!bills.empty())
     {
@@ -118,23 +117,37 @@ void MainWindow::HandleTableDataChanged(const QModelIndex& topLeft, const QModel
     }
 }
 
-
-
-// Credit Card Adjustment flow will be almost exactly the same as Bills, except any logical handling
-
 void MainWindow::OnAddCCButtonClicked()
 {
-    // TODO: SN: Need to change the BillAdderWidget to be named something like Adder Widget
-    //      Then since we connect it all, we can pass to constructor all of the text to use when building the UI
+    ItemAdder::ItemAdderWidget* cardAdder = new ItemAdder::ItemAdderWidget("Add Credit Card");
+    connect(cardAdder, &ItemAdder::ItemAdderWidget::NotifyItemAdded, this, &MainWindow::HandleCCAdded, Qt::UniqueConnection);
+    cardAdder->show();
 }
 
 void MainWindow::HandleCCAdded(const QString& cardName, const QString& owedAmmt)
 {
-    Q_UNUSED(cardName);
-    Q_UNUSED(owedAmmt);
+    CSVParserInstance.AddCC(cardName, owedAmmt);
+    ShowCCView();
 }
 
 void MainWindow::ShowCCView()
 {
-
+    QMap<QString, QString> cardData = CSVParserInstance.GetCCData();
+    if(!cardData.empty())
+    {
+        QStandardItemModel* model = new QStandardItemModel(cardData.size(), 2);
+        model->setHorizontalHeaderLabels({"Card", "OwedAmmnt"});
+        int rowCount = 0;
+        for(auto it = cardData.constBegin(); it != cardData.constEnd(); ++it)
+        {
+            model->setItem(rowCount, 0, new QStandardItem(it.key()));
+            model->setItem(rowCount, 1, new QStandardItem(it.value()));
+            ++rowCount;
+        }
+        ui->DataTableView->setModel(model);
+        ui->DataTableView->resizeColumnsToContents();
+        ui->DataTableView->resizeRowsToContents();
+        connect(model, &QStandardItemModel::dataChanged, this, &MainWindow::HandleTableDataChanged, Qt::UniqueConnection);
+        ActivetableView = CurrentDataView_E::CREDIT;
+    }
 }

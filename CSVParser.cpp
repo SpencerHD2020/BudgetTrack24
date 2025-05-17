@@ -11,6 +11,7 @@ namespace
     const QVector<QString> TRANSACTION_COLUMN_NAMES = { "Account", "Debit", "Credit", "Balance", "Date", "Description" };
     const QString APP_DATA_DIR_NAME = "BudgetTrack";
     const QString BILLS_CSV_NAME = "bills.csv";
+    const QString CC_CSV_NAME = "Credit.csv";
 }
 
 
@@ -107,6 +108,7 @@ void CSVParser::AddBill(const QString& desc, const QString& ammt)
         stream << desc.trimmed() << "," << ammt.trimmed() << "\n";
         billsCSV.close();
     }
+    CurrentBills.insert(desc, ammt);
 }
 
 void CSVParser::EnsureAppDatafolderExists()
@@ -132,28 +134,86 @@ void CSVParser::CreateEmptyBillsCSV()
 
 QMap<QString, QString> CSVParser::GetAllBills() /* Desc, Ammt */
 {
-    EnsureAppDatafolderExists();
-    QFile billsCSV(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + QDir::separator() + APP_DATA_DIR_NAME + QDir::separator() + BILLS_CSV_NAME);
-    if(billsCSV.exists())
+    if(CurrentBills.empty())
     {
-        if(billsCSV.open(QIODevice::ReadOnly | QIODevice::Text))
+        EnsureAppDatafolderExists();
+        QFile billsCSV(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + QDir::separator() + APP_DATA_DIR_NAME + QDir::separator() + BILLS_CSV_NAME);
+        if(billsCSV.exists())
         {
-            QTextStream in(&billsCSV);
-            int lineCount = 0;
-            CurrentBills.clear();
-            while(!in.atEnd())
+            if(billsCSV.open(QIODevice::ReadOnly | QIODevice::Text))
             {
-                QStringList lineData = in.readLine().split(",");
-                if(lineCount > 0)
+                QTextStream in(&billsCSV);
+                int lineCount = 0;
+                CurrentBills.clear();
+                while(!in.atEnd())
                 {
-                    CurrentBills.insert(lineData[0].trimmed(), lineData[1].trimmed());
+                    QStringList lineData = in.readLine().split(",");
+                    if(lineCount > 0)
+                    {
+                        CurrentBills.insert(lineData[0].trimmed(), lineData[1].trimmed());
+                    }
+                    ++lineCount;
                 }
-                ++lineCount;
             }
         }
     }
     return CurrentBills;
 }
 
+QMap<QString, QString> CSVParser::GetCCData()
+{
+    if(CurrentCCData.empty())
+    {
+        EnsureAppDatafolderExists();
+        QFile ccCSV(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + QDir::separator() + APP_DATA_DIR_NAME + QDir::separator() + CC_CSV_NAME);
+        if(ccCSV.exists())
+        {
+            if(ccCSV.open(QIODevice::ReadOnly | QIODevice::Text))
+            {
+                QTextStream in(&ccCSV);
+                int lineCount = 0;
+                CurrentCCData.clear();
+                while(!in.atEnd())
+                {
+                    QStringList lineData = in.readLine().split(",");
+                    if(lineCount > 0)
+                    {
+                        CurrentCCData.insert(lineData[0].trimmed(), lineData[1].trimmed());
+                    }
+                    ++lineCount;
+                }
+            }
+        }
+    }
+    return CurrentCCData;
+}
 
-// TODO: SN: Should build some kind of logic (maybe) to be able to just grab the bills again versus needing to query them each time, or maybe just pull them on construct and then would not need to mass pull again
+void CSVParser::AddCC(const QString& desc, const QString& ammt)
+{
+    EnsureAppDatafolderExists();
+    QFile ccCSV(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + QDir::separator() + APP_DATA_DIR_NAME + QDir::separator() + CC_CSV_NAME);
+    if(!ccCSV.exists())
+    {
+        CreateEmptyCCCSV();
+    }
+    if(ccCSV.open(QIODevice::Append | QIODevice::Text))
+    {
+        QTextStream stream(&ccCSV);
+        stream << desc.trimmed() << "," << ammt.trimmed() << "\n";
+        ccCSV.close();
+    }
+    CurrentCCData.insert(desc, ammt);
+}
+
+void CSVParser::CreateEmptyCCCSV()
+{
+    QFile ccCSV(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + QDir::separator() + APP_DATA_DIR_NAME + QDir::separator() + CC_CSV_NAME);
+    if(ccCSV.open(QIODevice::WriteOnly))
+    {
+        QTextStream stream(&ccCSV);
+        stream << "Desc,Ammt\n";
+        ccCSV.close();
+    }
+}
+
+
