@@ -127,3 +127,14 @@ void MainWindow::OnAddCCButtonClicked()
     // TODO: SN: Need to change the BillAdderWidget to be named something like Adder Widget
     //      Then since we connect it all, we can pass to constructor all of the text to use when building the UI
 }
+
+void MainWindow::HandleCCAdded(const QString& cardName, const QString& owedAmmt)
+{
+    Q_UNUSED(cardName);
+    Q_UNUSED(owedAmmt);
+}
+
+void MainWindow::ShowCCView()
+{
+
+}
