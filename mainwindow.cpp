@@ -6,6 +6,8 @@
 #include <QStandardItemModel>
 #include <QTableView>
 
+#include <iostream>
+
 using namespace mainSpace;
 using namespace CSV;
 namespace
@@ -17,6 +19,7 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , CSVParserInstance(nullptr)
+    , ActivetableView(CurrentDataView_E::NONE)
 {
     ui->setupUi(this);
     connect(ui->UploadBankCSVButton, &QPushButton::clicked, this, &MainWindow::OnUploadBankCSVButtonClicked, Qt::UniqueConnection);
@@ -62,10 +65,10 @@ void MainWindow::PopulateDataTableWithTransactions(const QVector<Transaction>& t
         model->setItem(row, 4, new QStandardItem(t.Date));
         model->setItem(row, 5, new QStandardItem(t.Desc));
     }
-
     ui->DataTableView->setModel(model);
     ui->DataTableView->resizeColumnsToContents();
     ui->DataTableView->resizeRowsToContents();
+    ActivetableView = CurrentDataView_E::TRANSACTIONS;
 }
 
 void MainWindow::OnAddBillsButtonClicked()
@@ -99,5 +102,22 @@ void MainWindow::ShowBillsView()
         ui->DataTableView->setModel(model);
         ui->DataTableView->resizeColumnsToContents();
         ui->DataTableView->resizeRowsToContents();
+        connect(model, &QStandardItemModel::dataChanged, this, &MainWindow::HandleTableDataChanged, Qt::UniqueConnection);
+        ActivetableView = CurrentDataView_E::BILLS;
     }
 }
+
+// TODO: Connect to main table on change and track what is currently shown, for bills and credit cards, allow edits to be made right there
+void MainWindow::HandleTableDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QList<int>&)
+{
+    Q_UNUSED(bottomRight);
+    //std::cout << "Data changed from " << topLeft.row() << " " << topLeft.column() << " to: " << bottomRight.row() << "," << bottomRight.column() << std::endl;
+    if(CurrentDataView_E::BILLS == ActivetableView)
+    {
+        // Take Entire Row and Push Update, if Name of Bill is changed this could be complicated. Maybe we should start persisting the data now as that might make it easier to tell which entry changed
+    }
+}
+
+
+
+

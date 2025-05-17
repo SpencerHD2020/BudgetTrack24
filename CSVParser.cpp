@@ -1,6 +1,5 @@
 #include "CSVParser.h"
 #include <QDir>
-#include <QMap>
 #include <QTextStream>
 #include <QStandardPaths>
 #include <QStringList>
@@ -18,10 +17,10 @@ CSVParser::CSVParser(QObject *parent)
     : QObject{parent}
 {
 }
-// In Retrospec, making this a public function is probably a better move, but hey
+// TODO: SN: Eventually lets append this too a master CSV so that it persists and can load on boot
+//      Would be nice to check if dates or something misaligns and avoid adding to avoid duplicate entries
 QVector<Transaction> CSVParser::ParseTransactionCSV(const QString& filePath)
 {
-    QVector<Transaction> parsedTransactions;
     QFile csv(filePath);
     if(csv.exists())
     {
@@ -66,8 +65,9 @@ QVector<Transaction> CSVParser::ParseTransactionCSV(const QString& filePath)
                             break;
                         }
                     }
+                    CurrentTransactions.clear();
                     // Build Transaction Objects and append to QVector
-                    parsedTransactions.push_back(Transaction(lineData[columnIndices.value(TRANSACTION_COLUMN_NAMES[0])].trimmed(), /*Acct*/
+                    CurrentTransactions.push_back(Transaction(lineData[columnIndices.value(TRANSACTION_COLUMN_NAMES[0])].trimmed(), /*Acct*/
                                                              lineData[columnIndices.value(TRANSACTION_COLUMN_NAMES[1])].trimmed(), /*Debit*/
                                                              lineData[columnIndices.value(TRANSACTION_COLUMN_NAMES[2])].trimmed(), /*Credit*/
                                                              lineData[columnIndices.value(TRANSACTION_COLUMN_NAMES[3])].trimmed(), /*Balance*/
@@ -82,7 +82,7 @@ QVector<Transaction> CSVParser::ParseTransactionCSV(const QString& filePath)
         }
     }
     csv.close();
-    return parsedTransactions;
+    return CurrentTransactions;
 }
 
 void CSVParser::AddBill(const QString& desc, const QString& ammt)
@@ -124,7 +124,6 @@ void CSVParser::CreateEmptyBillsCSV()
 
 QMap<QString, QString> CSVParser::GetAllBills() /* Desc, Ammt */
 {
-    QMap<QString, QString> bills;
     EnsureAppDatafolderExists();
     QFile billsCSV(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + QDir::separator() + APP_DATA_DIR_NAME + QDir::separator() + BILLS_CSV_NAME);
     if(billsCSV.exists())
@@ -133,16 +132,20 @@ QMap<QString, QString> CSVParser::GetAllBills() /* Desc, Ammt */
         {
             QTextStream in(&billsCSV);
             int lineCount = 0;
+            CurrentBills.clear();
             while(!in.atEnd())
             {
                 QStringList lineData = in.readLine().split(",");
                 if(lineCount > 0)
                 {
-                    bills.insert(lineData[0].trimmed(), lineData[1].trimmed());
+                    CurrentBills.insert(lineData[0].trimmed(), lineData[1].trimmed());
                 }
                 ++lineCount;
             }
         }
     }
-    return bills;
+    return CurrentBills;
 }
+
+
+// TODO: SN: Should build some kind of logic (maybe) to be able to just grab the bills again versus needing to query them each time, or maybe just pull them on construct and then would not need to mass pull again

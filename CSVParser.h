@@ -1,4 +1,5 @@
 #include <QFile>
+#include <QMap>
 #include <QObject>
 
 namespace CSV
@@ -38,5 +39,8 @@ namespace CSV
     private:
         void EnsureAppDatafolderExists();
         void CreateEmptyBillsCSV();
+
+        QVector<Transaction> CurrentTransactions;
+        QMap<QString, QString> CurrentBills;
     };
 }

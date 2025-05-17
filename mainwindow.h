@@ -13,6 +13,15 @@ namespace CSV
 
 namespace mainSpace
 {
+
+    enum class CurrentDataView_E
+    {
+        NONE,
+        TRANSACTIONS,
+        BILLS,
+        CREDIT
+    };
+
     class MainWindow : public QMainWindow
     {
         Q_OBJECT
@@ -21,12 +30,12 @@ namespace mainSpace
         MainWindow(QWidget *parent = nullptr);
         ~MainWindow();
 
-
     private slots:
         void OnUploadBankCSVButtonClicked();
         void OnAddBillsButtonClicked();
         void HandleBillAdded(const QString& desc, const QString& ammt);
         void ShowBillsView();
+        void HandleTableDataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QList<int>&);
 
     private:
         QString OpenFileDialog();
@@ -35,5 +44,6 @@ namespace mainSpace
         Ui::MainWindow *ui;
         QVector<CSV::Transaction> LatestTransactions;
         CSV::CSVParser CSVParserInstance;
+        CurrentDataView_E ActivetableView;
     };
 }
