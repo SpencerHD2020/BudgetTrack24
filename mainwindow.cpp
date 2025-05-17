@@ -86,16 +86,16 @@ void MainWindow::HandleBillAdded(const QString& desc, const QString& ammt)
 
 void MainWindow::ShowBillsView()
 {
-    QMap<QString, QString> bills = CSVParserInstance.GetAllBills();
+    QMap<int, QPair<QString, QString>> bills = CSVParserInstance.GetAllBills();
     if(!bills.empty())
     {
         QStandardItemModel* model = new QStandardItemModel(bills.size(), 2);
         model->setHorizontalHeaderLabels({"Desc", "Ammnt"});
         int rowCount = 0;
-        for(auto it = bills.constBegin(); it != bills.constEnd(); ++it)
+        for(int i = 1; i <= bills.size(); ++i)
         {
-            model->setItem(rowCount, 0, new QStandardItem(it.key()));
-            model->setItem(rowCount, 1, new QStandardItem(it.value()));
+            model->setItem(rowCount, 0, new QStandardItem(bills.value(i).first));
+            model->setItem(rowCount, 1, new QStandardItem(bills.value(i).second));
             ++rowCount;
         }
         ui->DataTableView->setModel(model);
@@ -111,9 +111,28 @@ void MainWindow::HandleTableDataChanged(const QModelIndex& topLeft, const QModel
 {
     Q_UNUSED(bottomRight);
     //std::cout << "Data changed from " << topLeft.row() << " " << topLeft.column() << " to: " << bottomRight.row() << "," << bottomRight.column() << std::endl;
+
+    // Now that both Bills and CC are indexed and always in order, we can pass the table index +1 so that CSVParser
+    //      knows exactly which element changed to update CSV and local object
+
+
+    const int changedRow = topLeft.row();  // Assumes same row for topLeft and bottomRight
+    const QAbstractItemModel* model = topLeft.model();  // Get the model from the index
+
+    // Assuming the table has exactly 2 columns (index 0 and 1)
+    QVariant column0Data = model->data(model->index(changedRow, 0));
+    QVariant column1Data = model->data(model->index(changedRow, 1));
+
+    //std::cout << "Column 0 Data: " << column0Data.toString().toStdString() << std::endl;
+    //std::cout << "Column 1 Data: " << column1Data.toString().toStdString() << std::endl;
+
     if(CurrentDataView_E::BILLS == ActivetableView)
     {
-        // Take Entire Row and Push Update, if Name of Bill is changed this could be complicated. Maybe we should start persisting the data now as that might make it easier to tell which entry changed
+        // CSVParser.HandleBillUpdated((changedRow + 1), column0Data.toString(), column1Data.toString());
+    }
+    else if(CurrentDataView_E::CREDIT == ActivetableView)
+    {
+        // CSVParser.HandleCCUpdated((changedRow + 1), column0Data.toString(), column1Data.toString());
     }
 }
 
@@ -132,16 +151,16 @@ void MainWindow::HandleCCAdded(const QString& cardName, const QString& owedAmmt)
 
 void MainWindow::ShowCCView()
 {
-    QMap<QString, QString> cardData = CSVParserInstance.GetCCData();
+    QMap<int, QPair<QString, QString>> cardData = CSVParserInstance.GetCCData();
     if(!cardData.empty())
     {
         QStandardItemModel* model = new QStandardItemModel(cardData.size(), 2);
         model->setHorizontalHeaderLabels({"Card", "OwedAmmnt"});
         int rowCount = 0;
-        for(auto it = cardData.constBegin(); it != cardData.constEnd(); ++it)
+        for(int i = 1; i <= cardData.size(); ++i)
         {
-            model->setItem(rowCount, 0, new QStandardItem(it.key()));
-            model->setItem(rowCount, 1, new QStandardItem(it.value()));
+            model->setItem(rowCount, 0, new QStandardItem(cardData.value(i).first));
+            model->setItem(rowCount, 1, new QStandardItem(cardData.value(i).second));
             ++rowCount;
         }
         ui->DataTableView->setModel(model);

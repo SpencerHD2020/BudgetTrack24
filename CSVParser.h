@@ -1,5 +1,6 @@
 #include <QFile>
 #include <QMap>
+#include <QPair>
 #include <QObject>
 
 namespace CSV
@@ -36,11 +37,11 @@ namespace CSV
 
         // Bill Getter/Setter
         void AddBill(const QString& desc, const QString& ammt);
-        QMap<QString, QString> GetAllBills();
+        QMap<int, QPair<QString, QString>> GetAllBills();
 
         // CC Getter/Setter
         void AddCC(const QString& desc, const QString& ammt);
-        QMap<QString, QString> GetCCData();
+        QMap<int, QPair<QString, QString>> GetCCData();
 
     private:
         void EnsureAppDatafolderExists();
@@ -48,7 +49,10 @@ namespace CSV
         void CreateEmptyCCCSV();
 
         QVector<Transaction> CurrentTransactions;
-        QMap<QString, QString> CurrentBills;
-        QMap<QString, QString> CurrentCCData;
+
+
+        // TODO: SN: Need to make these QMap<int, QPair<QString, QString>> where int is index so that we can track what changed on change
+        QMap<int, QPair<QString, QString>> CurrentBills;
+        QMap<int, QPair<QString, QString>> CurrentCCData;
     };
 }

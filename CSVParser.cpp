@@ -108,7 +108,7 @@ void CSVParser::AddBill(const QString& desc, const QString& ammt)
         stream << desc.trimmed() << "," << ammt.trimmed() << "\n";
         billsCSV.close();
     }
-    CurrentBills.insert(desc, ammt);
+    CurrentBills.insert((CurrentBills.size() + 1), {desc, ammt});
 }
 
 void CSVParser::EnsureAppDatafolderExists()
@@ -132,7 +132,7 @@ void CSVParser::CreateEmptyBillsCSV()
     }
 }
 
-QMap<QString, QString> CSVParser::GetAllBills() /* Desc, Ammt */
+QMap<int, QPair<QString, QString>> CSVParser::GetAllBills() /* Desc, Ammt */
 {
     if(CurrentBills.empty())
     {
@@ -150,7 +150,7 @@ QMap<QString, QString> CSVParser::GetAllBills() /* Desc, Ammt */
                     QStringList lineData = in.readLine().split(",");
                     if(lineCount > 0)
                     {
-                        CurrentBills.insert(lineData[0].trimmed(), lineData[1].trimmed());
+                        CurrentBills.insert(lineCount, {lineData[0].trimmed(), lineData[1].trimmed()});
                     }
                     ++lineCount;
                 }
@@ -160,7 +160,7 @@ QMap<QString, QString> CSVParser::GetAllBills() /* Desc, Ammt */
     return CurrentBills;
 }
 
-QMap<QString, QString> CSVParser::GetCCData()
+QMap<int, QPair<QString, QString>> CSVParser::GetCCData()
 {
     if(CurrentCCData.empty())
     {
@@ -178,7 +178,7 @@ QMap<QString, QString> CSVParser::GetCCData()
                     QStringList lineData = in.readLine().split(",");
                     if(lineCount > 0)
                     {
-                        CurrentCCData.insert(lineData[0].trimmed(), lineData[1].trimmed());
+                        CurrentCCData.insert(lineCount, {lineData[0].trimmed(), lineData[1].trimmed()});
                     }
                     ++lineCount;
                 }
@@ -202,7 +202,7 @@ void CSVParser::AddCC(const QString& desc, const QString& ammt)
         stream << desc.trimmed() << "," << ammt.trimmed() << "\n";
         ccCSV.close();
     }
-    CurrentCCData.insert(desc, ammt);
+    CurrentCCData.insert((CurrentCCData.size() + 1), {desc, ammt});
 }
 
 void CSVParser::CreateEmptyCCCSV()
