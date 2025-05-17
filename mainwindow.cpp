@@ -128,7 +128,7 @@ void MainWindow::HandleTableDataChanged(const QModelIndex& topLeft, const QModel
 
     if(CurrentDataView_E::BILLS == ActivetableView)
     {
-        // CSVParser.HandleBillUpdated((changedRow + 1), column0Data.toString(), column1Data.toString());
+        CSVParserInstance.HandleBillUpdated((changedRow + 1), column0Data.toString(), column1Data.toString());
     }
     else if(CurrentDataView_E::CREDIT == ActivetableView)
     {

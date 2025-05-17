@@ -38,10 +38,12 @@ namespace CSV
         // Bill Getter/Setter
         void AddBill(const QString& desc, const QString& ammt);
         QMap<int, QPair<QString, QString>> GetAllBills();
+        void HandleBillUpdated(const int index, const QString& name, const QString& ammnt);
 
         // CC Getter/Setter
         void AddCC(const QString& desc, const QString& ammt);
         QMap<int, QPair<QString, QString>> GetCCData();
+        void HandleCCUpdated(const int index, const QString& name, const QString& ammnt);
 
     private:
         void EnsureAppDatafolderExists();

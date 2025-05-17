@@ -4,6 +4,9 @@
 #include <QStandardPaths>
 #include <QStringList>
 
+
+#include <iostream>
+
 using namespace CSV;
 namespace
 {
@@ -214,6 +217,39 @@ void CSVParser::CreateEmptyCCCSV()
         stream << "Desc,Ammt\n";
         ccCSV.close();
     }
+}
+
+void CSVParser::HandleBillUpdated(const int index, const QString& name, const QString& ammnt)
+{
+    // Update Local Object
+    std::cout << "BILL Updated: " << CurrentBills.value(index).first.toStdString() << " - " << CurrentBills.value(index).second.toStdString() << " .. Changed to: " << name.toStdString() << " - " << ammnt.toStdString() << std::endl;
+    CurrentBills[index] = {name, ammnt};
+
+
+    // Update CSV File - Realistically, it would be best to find the line in CSV and just replace that. But IK these files will never get
+    //      that long, so it will be MUCH easier to just wipe the file and rewrite it.
+
+    QFile billsCSV(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + QDir::separator() + APP_DATA_DIR_NAME + QDir::separator() + BILLS_CSV_NAME);
+    if(billsCSV.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        QTextStream stream(&billsCSV);
+        stream << "Desc,Ammt\n";
+        for(int i = 1; i <= CurrentBills.size(); ++i)
+        {
+            stream << CurrentBills.value(i).first.trimmed() << "," << CurrentBills.value(i).second.trimmed() << "\n";
+        }
+
+
+
+        billsCSV.close();
+    }
+}
+
+void CSVParser::HandleCCUpdated(const int index, const QString& name, const QString& ammnt)
+{
+    Q_UNUSED(index);
+    Q_UNUSED(name);
+    Q_UNUSED(ammnt);
 }
 
 
