@@ -37,6 +37,11 @@ namespace mainSpace
         void ShowBillsView();
         void HandleTableDataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QList<int>&);
 
+        // Credit Card SLOTS
+        void OnAddCCButtonClicked();
+        void HandleCCAdded(const QString& cardName, const QString& owedAmmt);
+        void ShowCCView();
+
     private:
         QString OpenFileDialog();
         void PopulateDataTableWithTransactions(const QVector<CSV::Transaction>& transactions);
