@@ -263,4 +263,25 @@ void CSVParser::HandleCCUpdated(const int index, const QString& name, const QStr
     }
 }
 
+void CSVParser::ReconfigureCurrentTotals()
+{
+    // Fetch old totals - Seperate method - needs to check if they exist? If not, we can just hard code what totals to use to grab inital
+
+
+    // TODO: SN: Need to add caching of last 4-5 Transactions, find that start point and add any new transactions there that do NOT exist within those 4-5
+    // Therefore, this does NOT need to be done here
+
+    // Iterate Transactions and find new raw Total
+
+    // Iterate Bills and find total Bills
+
+    // Iterate CC and find total debt
+
+    // Calculate total extra
+
+    // Update totals CSV file
+
+    // DONT notify UI, we do not want to double cache value, so when that view is going to be shown they can request the Totals struct from here
+}
+
 

@@ -76,11 +76,16 @@ namespace CSV
         void CreateEmptyBillsCSV();
         void CreateEmptyCCCSV();
 
+        // As this method gets built out, consider, would it be worth passing an enum to this describing what changed? Then we do not have to fully reconfigure everything?
+        //      We MAY have to, because Transaction data is going to be tricky, kind of depends how we do it. IG since Transactions are not all long term stored, we could assume that CurrentTransactions
+        //      is always new, but we may need to add a flag to Transaction struct (added to total) or something like that. But more realistically, it will just be prior total - all the transactions in that struct
+        //      How do we handle initial run? Could prolly be abit hacked since just me using this
+
+        void ReconfigureCurrentTotals();
+
         QVector<Transaction> CurrentTransactions;
-
-
-        // TODO: SN: Need to make these QMap<int, QPair<QString, QString>> where int is index so that we can track what changed on change
         QMap<int, QPair<QString, QString>> CurrentBills;
         QMap<int, QPair<QString, QString>> CurrentCCData;
+        Totals CurrentTotals;
     };
 }
