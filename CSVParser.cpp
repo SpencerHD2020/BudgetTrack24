@@ -225,7 +225,6 @@ void CSVParser::HandleBillUpdated(const int index, const QString& name, const QS
     std::cout << "BILL Updated: " << CurrentBills.value(index).first.toStdString() << " - " << CurrentBills.value(index).second.toStdString() << " .. Changed to: " << name.toStdString() << " - " << ammnt.toStdString() << std::endl;
     CurrentBills[index] = {name, ammnt};
 
-
     // Update CSV File - Realistically, it would be best to find the line in CSV and just replace that. But IK these files will never get
     //      that long, so it will be MUCH easier to just wipe the file and rewrite it.
 
@@ -238,18 +237,30 @@ void CSVParser::HandleBillUpdated(const int index, const QString& name, const QS
         {
             stream << CurrentBills.value(i).first.trimmed() << "," << CurrentBills.value(i).second.trimmed() << "\n";
         }
-
-
-
         billsCSV.close();
     }
 }
 
 void CSVParser::HandleCCUpdated(const int index, const QString& name, const QString& ammnt)
 {
-    Q_UNUSED(index);
-    Q_UNUSED(name);
-    Q_UNUSED(ammnt);
+    // Update Local Object
+    std::cout << "CC Updated: " << CurrentCCData.value(index).first.toStdString() << " - " << CurrentCCData.value(index).second.toStdString() << " .. Changed to: " << name.toStdString() << " - " << ammnt.toStdString() << std::endl;
+    CurrentCCData[index] = {name, ammnt};
+
+    // Update CSV File - Realistically, it would be best to find the line in CSV and just replace that. But IK these files will never get
+    //      that long, so it will be MUCH easier to just wipe the file and rewrite it.
+
+    QFile ccCSV(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + QDir::separator() + APP_DATA_DIR_NAME + QDir::separator() + CC_CSV_NAME);
+    if(ccCSV.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        QTextStream stream(&ccCSV);
+        stream << "Desc,Ammt\n";
+        for(int i = 1; i <= CurrentCCData.size(); ++i)
+        {
+            stream << CurrentCCData.value(i).first.trimmed() << "," << CurrentCCData.value(i).second.trimmed() << "\n";
+        }
+        ccCSV.close();
+    }
 }
 
 

@@ -107,24 +107,13 @@ void MainWindow::ShowBillsView()
 }
 
 // TODO: Connect to main table on change and track what is currently shown, for bills and credit cards, allow edits to be made right there
-void MainWindow::HandleTableDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QList<int>&)
+void MainWindow::HandleTableDataChanged(const QModelIndex& topLeft, const QModelIndex&, const QList<int>&)
 {
-    Q_UNUSED(bottomRight);
-    //std::cout << "Data changed from " << topLeft.row() << " " << topLeft.column() << " to: " << bottomRight.row() << "," << bottomRight.column() << std::endl;
+    const int changedRow = topLeft.row();
+    const QAbstractItemModel* model = topLeft.model();
 
-    // Now that both Bills and CC are indexed and always in order, we can pass the table index +1 so that CSVParser
-    //      knows exactly which element changed to update CSV and local object
-
-
-    const int changedRow = topLeft.row();  // Assumes same row for topLeft and bottomRight
-    const QAbstractItemModel* model = topLeft.model();  // Get the model from the index
-
-    // Assuming the table has exactly 2 columns (index 0 and 1)
     QVariant column0Data = model->data(model->index(changedRow, 0));
     QVariant column1Data = model->data(model->index(changedRow, 1));
-
-    //std::cout << "Column 0 Data: " << column0Data.toString().toStdString() << std::endl;
-    //std::cout << "Column 1 Data: " << column1Data.toString().toStdString() << std::endl;
 
     if(CurrentDataView_E::BILLS == ActivetableView)
     {
@@ -132,7 +121,7 @@ void MainWindow::HandleTableDataChanged(const QModelIndex& topLeft, const QModel
     }
     else if(CurrentDataView_E::CREDIT == ActivetableView)
     {
-        // CSVParser.HandleCCUpdated((changedRow + 1), column0Data.toString(), column1Data.toString());
+        CSVParserInstance.HandleCCUpdated((changedRow + 1), column0Data.toString(), column1Data.toString());
     }
 }
 

@@ -35,7 +35,7 @@ namespace mainSpace
         void OnAddBillsButtonClicked();
         void HandleBillAdded(const QString& desc, const QString& ammt);
         void ShowBillsView();
-        void HandleTableDataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QList<int>&);
+        void HandleTableDataChanged(const QModelIndex& topLeft, const QModelIndex&, const QList<int>&);
 
         // Credit Card SLOTS
         void OnAddCCButtonClicked();
