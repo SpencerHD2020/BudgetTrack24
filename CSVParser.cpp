@@ -19,6 +19,7 @@ namespace
     // CSV to store last 100 Transactions
     const QString LEGACY_TRANSACTIONS_CSV_NAME = "LegacyTransactions.csv";
     constexpr int MAX_PERSISTED_TRANSACTIONS = 100;
+    const QString TOTALS_CSV_NAME = "Totals.csv";
 }
 
 
@@ -30,8 +31,7 @@ CSVParser::CSVParser(QObject *parent)
     : QObject{parent}
 {
 }
-// TODO: SN: Eventually lets append this too a master CSV so that it persists and can load on boot
-//      Would be nice to check if dates or something misaligns and avoid adding to avoid duplicate entries
+
 QVector<Transaction> CSVParser::HandleNewTransactionCSVAdded(const QString& filePath)
 {
     QVector<Transaction> newTransactions = ParseTransactionCSV(filePath); // Gets sorted in accending date order by this method
@@ -39,36 +39,51 @@ QVector<Transaction> CSVParser::HandleNewTransactionCSVAdded(const QString& file
     {
         if(CreateEmptyLegacyTransactionsCSVIfNotExists()) // CSV Existed
         {
-            QVector<Transaction> legacyTrans = ParseTransactionCSV(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + QDir::separator() + APP_DATA_DIR_NAME + QDir::separator() + LEGACY_TRANSACTIONS_CSV_NAME);
-            // Count how many new Transactions there are = x
-
-            // Remove oldest x Transactions from Legacy Sheet
-            const int newTransAmmnt = (newTransactions.size() > MAX_PERSISTED_TRANSACTIONS ? MAX_PERSISTED_TRANSACTIONS : newTransactions.size());
-            if(legacyTrans.size() >= newTransAmmnt)
+            QVector<Transaction> legacyTrans = ParseTransactionCSV(GetLegacyTransactionsCSVPath());
+            const int newStartingPoint = newTransactions.indexOf(legacyTrans.last());
+            if(-1 != newStartingPoint)
             {
-                legacyTrans.remove(0, newTransAmmnt);
-            }
+                // Delete everything up to and including this index from new transactions
+                newTransactions.remove(0, (newStartingPoint + 1));
 
-            // Make Current Transactions, Legacy Trans + New Trans
-            CurrentTransactions.clear();
-            CurrentTransactions = legacyTrans;
-            CurrentTransactions.append(newTransactions);
+                // Combine the 2 vectors, if neccessary to cap at MAX_PERSISTED_TRANSACTIONS entries
+                CurrentTransactions.clear();
+                CurrentTransactions = legacyTrans;
+                CurrentTransactions.append(newTransactions);
+
+                if(CurrentTransactions.size() >= MAX_PERSISTED_TRANSACTIONS)
+                {
+                    CurrentTransactions.remove(0, (CurrentTransactions.size() - MAX_PERSISTED_TRANSACTIONS));
+                }
+            }
+            else
+            {
+                // Gap or something???? Just blindly combine them for now - Take below logic maybe
+                const int newTransAmmnt = (newTransactions.size() > MAX_PERSISTED_TRANSACTIONS ? MAX_PERSISTED_TRANSACTIONS : newTransactions.size());
+                if(legacyTrans.size() >= newTransAmmnt)
+                {
+                    legacyTrans.remove(0, newTransAmmnt);
+                }
+
+                // Make Current Transactions, Legacy Trans + New Trans
+                CurrentTransactions.clear();
+                CurrentTransactions = legacyTrans;
+                CurrentTransactions.append(newTransactions);
+            }
         }
         else // This is the first CSV ever uploaded to the application
         {
-            // Add newest MAX_PERSISTED_TRANSACTIONS (or all if < MAX_PERSISTED_TRANSACTIONS) to Legacy Sheet
             if(newTransactions.size() > MAX_PERSISTED_TRANSACTIONS)
             {
                 newTransactions.remove(0, (newTransactions.size() - MAX_PERSISTED_TRANSACTIONS));
-                CurrentTransactions = newTransactions;
             }
+            CurrentTransactions = newTransactions;
         }
-
-
-
-        // Call Method to overwrite Legacy Sheet with updated CurrentTransactions Vector
+        // Overwrite Legacy Sheet with updated CurrentTransactions Vector
+        SaveCurrentTransactionsToCSV();
 
         // Also need to reconfigure totals at this point
+        ReconfigureCurrentTotals();
     }
     return CurrentTransactions;
 }
@@ -241,28 +256,46 @@ void CSVParser::HandleCCUpdated(const int index, const QString& name, const QStr
 
 void CSVParser::ReconfigureCurrentTotals()
 {
-    // Fetch old totals - Seperate method - needs to check if they exist? If not, we can just hard code what totals to use to grab inital
+    /*
+        QString RawTotal;
+        QString TotalBills;
+        QString TotalDebt;
+        QString TotalExtra;
+
+        CurrentTotals
+    */
 
 
-    // TODO: SN: Need to add caching of last 4-5 Transactions, find that start point and add any new transactions there that do NOT exist within those 4-5
-    // Therefore, this does NOT need to be done here
+    // Take last of CurrentTransactions and take Balance from there - RawTotal
+    CurrentTotals.RawTotal = CurrentTransactions.last().Balance;
 
-    // Iterate Transactions and find new raw Total
+    // Iterate Bills and find total Bills - CurrentBills QMap<int, QPair<QString, QString>>
+    double billTotal = 0;
+    for(int billIndex = 0; billIndex < CurrentBills.count(); ++billIndex)
+    {
+        billTotal += CurrentBills.value(billIndex).second.toDouble();
+    }
+    CurrentTotals.TotalBills = QString::number(billTotal);
 
-    // Iterate Bills and find total Bills
-
-    // Iterate CC and find total debt
+    // Iterate CC and find total debt - QMap<int, QPair<QString, QString>> CurrentCCData;
+    double ccTotal = 0;
+    for(int ccIndex = 0; ccIndex < CurrentCCData.count(); ++ccIndex)
+    {
+        ccTotal += CurrentCCData.value(ccIndex).second.toDouble();
+    }
+    CurrentTotals.TotalDebt = QString::number(ccTotal);
 
     // Calculate total extra
+    CurrentTotals.TotalExtra = QString::number(CurrentTotals.RawTotal.toDouble() - (CurrentTotals.TotalBills.toDouble() + CurrentTotals.TotalDebt.toDouble()));
 
-    // Update totals CSV file
+    // Update totals CSV file - Will need logic to load this in somewhere on boot most likely
 
     // DONT notify UI, we do not want to double cache value, so when that view is going to be shown they can request the Totals struct from here
 }
 
 bool CSVParser::CreateEmptyLegacyTransactionsCSVIfNotExists()
 {
-    QFile transCSV(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + QDir::separator() + APP_DATA_DIR_NAME + QDir::separator() + LEGACY_TRANSACTIONS_CSV_NAME);
+    QFile transCSV(GetLegacyTransactionsCSVPath());
     if(!transCSV.exists())
     {
         if(transCSV.open(QIODevice::WriteOnly))
@@ -352,6 +385,25 @@ QVector<Transaction> CSVParser::ParseTransactionCSV(const QString& filePath)
     }
     csv.close();
     return newTransactions;
+}
+
+void CSVParser::SaveCurrentTransactionsToCSV() const
+{
+    QFile legacyTrans(GetLegacyTransactionsCSVPath());
+    legacyTrans.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
+    QTextStream out(&legacyTrans);
+    out << "Acct,Debit,Credit,Balance,Date,Desc\n";
+    for(const Transaction& tran : CurrentTransactions)
+    {
+        // Could be issues with Date format and future runs here... Will need to do some testing there
+        out << tran.Account << "," << tran.Debit << "," << tran.Credit << "," << tran.Balance << "," << tran.Date.toString() << "," << tran.Desc << "\n";
+    }
+    legacyTrans.close();
+}
+
+QString CSVParser::GetLegacyTransactionsCSVPath() const
+{
+    return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + QDir::separator() + APP_DATA_DIR_NAME + QDir::separator() + LEGACY_TRANSACTIONS_CSV_NAME;
 }
 
 

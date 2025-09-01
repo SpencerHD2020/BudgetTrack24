@@ -27,6 +27,20 @@ namespace CSV
         QString Balance;
         QDateTime Date;
         QString Desc;
+
+        bool operator==(const Transaction& other) const
+        {
+            return Account == other.Account &&
+                   Debit == other.Debit &&
+                   Credit == other.Credit &&
+                   Balance == other.Balance &&
+                   Date == other.Date &&
+                   Desc == other.Desc;
+        }
+        bool operator!=(const Transaction& other) const
+        {
+            return !(*this == other);
+        }
     };
 
 
@@ -86,6 +100,8 @@ namespace CSV
         void ReconfigureCurrentTotals();
         void SortTransactions(QVector<Transaction>& transactions);
         QVector<Transaction> ParseTransactionCSV(const QString& filePath);
+        void SaveCurrentTransactionsToCSV() const;
+        QString GetLegacyTransactionsCSVPath() const;
 
         QVector<Transaction> CurrentTransactions;
         QMap<int, QPair<QString, QString>> CurrentBills;
