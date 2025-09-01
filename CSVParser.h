@@ -2,6 +2,7 @@
 #include <QMap>
 #include <QPair>
 #include <QObject>
+#include <QDateTime>
 
 namespace CSV
 {
@@ -11,7 +12,7 @@ namespace CSV
         Transaction()
         {}
 
-        Transaction(QString account, QString debit, QString credit, QString balance, QString date, QString desc)
+        Transaction(QString account, QString debit, QString credit, QString balance, QDateTime date, QString desc)
             : Account(account)
             , Debit(debit)
             , Credit(credit)
@@ -24,7 +25,7 @@ namespace CSV
         QString Debit;
         QString Credit;
         QString Balance;
-        QString Date;
+        QDateTime Date;
         QString Desc;
     };
 
@@ -59,7 +60,7 @@ namespace CSV
         Q_OBJECT
     public:
         explicit CSVParser(QObject *parent = nullptr);
-        QVector<Transaction> ParseTransactionCSV(const QString& filePath);
+        QVector<Transaction> HandleNewTransactionCSVAdded(const QString& filePath);
 
         // Bill Getter/Setter
         void AddBill(const QString& desc, const QString& ammt);
@@ -75,6 +76,7 @@ namespace CSV
         void EnsureAppDatafolderExists();
         void CreateEmptyBillsCSV();
         void CreateEmptyCCCSV();
+        bool CreateEmptyLegacyTransactionsCSVIfNotExists();
 
         // As this method gets built out, consider, would it be worth passing an enum to this describing what changed? Then we do not have to fully reconfigure everything?
         //      We MAY have to, because Transaction data is going to be tricky, kind of depends how we do it. IG since Transactions are not all long term stored, we could assume that CurrentTransactions
@@ -82,6 +84,8 @@ namespace CSV
         //      How do we handle initial run? Could prolly be abit hacked since just me using this
 
         void ReconfigureCurrentTotals();
+        void SortTransactions(QVector<Transaction>& transactions);
+        QVector<Transaction> ParseTransactionCSV(const QString& filePath);
 
         QVector<Transaction> CurrentTransactions;
         QMap<int, QPair<QString, QString>> CurrentBills;

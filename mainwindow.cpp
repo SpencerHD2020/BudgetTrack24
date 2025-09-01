@@ -38,7 +38,7 @@ void MainWindow::OnUploadBankCSVButtonClicked()
     QString filePath = OpenFileDialog();
     if(!filePath.isEmpty())
     {
-        LatestTransactions = CSVParserInstance.ParseTransactionCSV(filePath);
+        LatestTransactions = CSVParserInstance.HandleNewTransactionCSVAdded(filePath);
         if(!LatestTransactions.isEmpty())
         {
             PopulateDataTableWithTransactions(LatestTransactions);
