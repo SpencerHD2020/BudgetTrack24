@@ -86,6 +86,9 @@ namespace CSV
         QMap<int, QPair<QString, QString>> GetCCData();
         void HandleCCUpdated(const int index, const QString& name, const QString& ammnt);
 
+    signals:
+        void NotifyTotalsUpdated(const Totals& totals);
+
     private:
         void EnsureAppDatafolderExists();
         void CreateEmptyBillsCSV();
@@ -102,6 +105,10 @@ namespace CSV
         QVector<Transaction> ParseTransactionCSV(const QString& filePath);
         void SaveCurrentTransactionsToCSV() const;
         QString GetLegacyTransactionsCSVPath() const;
+        void SaveCurrentTotalsToCSV();
+        QString GetCurrentTotalsCSVPath() const;
+        void CreateCurrentTotalsCSVIfNotExists();
+        void LoadCurrentTotalsFromCSVIfExists();
 
         QVector<Transaction> CurrentTransactions;
         QMap<int, QPair<QString, QString>> CurrentBills;

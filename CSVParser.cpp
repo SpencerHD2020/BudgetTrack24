@@ -30,6 +30,11 @@ namespace
 CSVParser::CSVParser(QObject *parent)
     : QObject{parent}
 {
+    LoadCurrentTotalsFromCSVIfExists();
+
+    // Tech Debt, a very Hacky way to ensure we have good objects from the jump
+    //QMap<int, QPair<QString, QString>> bills = GetAllBills();
+    //QMap<int, QPair<QString, QString>> cc = GetCCData();
 }
 
 QVector<Transaction> CSVParser::HandleNewTransactionCSVAdded(const QString& filePath)
@@ -103,6 +108,7 @@ void CSVParser::AddBill(const QString& desc, const QString& ammt)
         billsCSV.close();
     }
     CurrentBills.insert((CurrentBills.size() + 1), {desc, ammt});
+    ReconfigureCurrentTotals();
 }
 
 void CSVParser::EnsureAppDatafolderExists()
@@ -197,6 +203,7 @@ void CSVParser::AddCC(const QString& desc, const QString& ammt)
         ccCSV.close();
     }
     CurrentCCData.insert((CurrentCCData.size() + 1), {desc, ammt});
+    ReconfigureCurrentTotals();
 }
 
 void CSVParser::CreateEmptyCCCSV()
@@ -256,16 +263,6 @@ void CSVParser::HandleCCUpdated(const int index, const QString& name, const QStr
 
 void CSVParser::ReconfigureCurrentTotals()
 {
-    /*
-        QString RawTotal;
-        QString TotalBills;
-        QString TotalDebt;
-        QString TotalExtra;
-
-        CurrentTotals
-    */
-
-
     // Take last of CurrentTransactions and take Balance from there - RawTotal
     CurrentTotals.RawTotal = CurrentTransactions.last().Balance;
 
@@ -289,8 +286,10 @@ void CSVParser::ReconfigureCurrentTotals()
     CurrentTotals.TotalExtra = QString::number(CurrentTotals.RawTotal.toDouble() - (CurrentTotals.TotalBills.toDouble() + CurrentTotals.TotalDebt.toDouble()));
 
     // Update totals CSV file - Will need logic to load this in somewhere on boot most likely
+    SaveCurrentTotalsToCSV();
 
-    // DONT notify UI, we do not want to double cache value, so when that view is going to be shown they can request the Totals struct from here
+    // Notify UI, but UI will NOT cache value, they will just update the UI if it is shown
+    emit NotifyTotalsUpdated(CurrentTotals);
 }
 
 bool CSVParser::CreateEmptyLegacyTransactionsCSVIfNotExists()
@@ -405,5 +404,63 @@ QString CSVParser::GetLegacyTransactionsCSVPath() const
 {
     return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + QDir::separator() + APP_DATA_DIR_NAME + QDir::separator() + LEGACY_TRANSACTIONS_CSV_NAME;
 }
+
+QString CSVParser::GetCurrentTotalsCSVPath() const
+{
+    return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + QDir::separator() + APP_DATA_DIR_NAME + QDir::separator() + TOTALS_CSV_NAME;
+}
+
+void CSVParser::SaveCurrentTotalsToCSV()
+{
+    CreateCurrentTotalsCSVIfNotExists();
+    QFile totalsCSV(GetCurrentTotalsCSVPath());
+    totalsCSV.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
+    QTextStream out(&totalsCSV);
+    out << "RawTotal,TotalBills,TotalDebt,TotalExtra\n";
+    out << CurrentTotals.RawTotal << "," << CurrentTotals.TotalBills << "," << CurrentTotals.TotalDebt << "," << CurrentTotals.TotalExtra << "\n";
+    totalsCSV.close();
+}
+
+void CSVParser::CreateCurrentTotalsCSVIfNotExists()
+{
+    QFile totalsCSV(GetCurrentTotalsCSVPath());
+    if(!totalsCSV.exists())
+    {
+        if(totalsCSV.open(QIODevice::WriteOnly))
+        {
+            QTextStream stream(&totalsCSV);
+            stream << "RawTotal,TotalBills,TotalDebt,TotalExtra\n";
+            totalsCSV.close();
+        }
+    }
+}
+
+void CSVParser::LoadCurrentTotalsFromCSVIfExists()
+{
+    QFile totalsCSV(GetCurrentTotalsCSVPath());
+    if(totalsCSV.exists())
+    {
+        if(totalsCSV.open(QIODevice::ReadOnly | QIODevice::Text))
+        {
+            QTextStream in(&totalsCSV);
+            int lineCount = 0;
+            while(!in.atEnd())
+            {
+                QStringList lineData = in.readLine().split(",");
+                if(lineCount > 0)
+                {
+                    CurrentTotals = Totals(lineData[0].trimmed(), lineData[1].trimmed(), lineData[2].trimmed(), lineData[3].trimmed());
+                    break;
+                }
+                ++lineCount;
+            }
+        }
+    }
+}
+
+
+
+
+
 
 
