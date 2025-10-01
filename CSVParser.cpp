@@ -32,6 +32,8 @@ CSVParser::CSVParser(QObject *parent)
 {
     LoadCurrentTotalsFromCSVIfExists();
 
+    // We should also Load Transactions on construct
+
     // Tech Debt, a very Hacky way to ensure we have good objects from the jump
     //QMap<int, QPair<QString, QString>> bills = GetAllBills();
     //QMap<int, QPair<QString, QString>> cc = GetCCData();

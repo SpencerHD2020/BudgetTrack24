@@ -62,7 +62,7 @@ void MainWindow::PopulateDataTableWithTransactions(const QVector<Transaction>& t
         model->setItem(row, 1, new QStandardItem(t.Debit));
         model->setItem(row, 2, new QStandardItem(t.Credit));
         model->setItem(row, 3, new QStandardItem(t.Balance));
-        model->setItem(row, 4, new QStandardItem(t.Date));
+        model->setItem(row, 4, new QStandardItem(t.Date.toString()));
         model->setItem(row, 5, new QStandardItem(t.Desc));
     }
     ui->DataTableView->setModel(model);
