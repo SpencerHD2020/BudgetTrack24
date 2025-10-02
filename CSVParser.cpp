@@ -1,8 +1,9 @@
 #include "CSVParser.h"
 #include <QDir>
-#include <QTextStream>
+#include <QRegularExpression>
 #include <QStandardPaths>
 #include <QStringList>
+#include <QTextStream>
 #include <algorithm>
 
 
@@ -12,7 +13,7 @@ using namespace CSV;
 namespace
 {
     // Debit is subtract, Credit is add
-    const QVector<QString> TRANSACTION_COLUMN_NAMES = { "Account", "Debit", "Credit", "Balance", "Date", "Description" };
+    const QVector<QString> TRANSACTION_COLUMN_NAMES = {"Date", "Description", "Debit/Credit", "Balance" };
     const QString APP_DATA_DIR_NAME = "BudgetTrack";
     const QString BILLS_CSV_NAME = "bills.csv";
     const QString CC_CSV_NAME = "Credit.csv";
@@ -31,6 +32,7 @@ CSVParser::CSVParser(QObject *parent)
     : QObject{parent}
 {
     LoadCurrentTotalsFromCSVIfExists();
+    LoadTransactionsFromCSVIfExists();
 
     // We should also Load Transactions on construct
 
@@ -334,9 +336,13 @@ QVector<Transaction> CSVParser::ParseTransactionCSV(const QString& filePath)
             QMap<QString, int> columnIndices;
             bool columnverificationComplete = false;
 
+            QTime time(23, 59);
+            QDate currentDate(1942, 5, 29);
+
             while(!in.atEnd())
             {
-                QStringList lineData = in.readLine().split(",");
+                //QStringList lineData = in.readLine().split(",");
+                QStringList lineData = ParseCSVLine(in.readLine());
                 if(lineCount == 0)
                 {
                     for(int i = 0; i < lineData.length(); ++i)
@@ -369,12 +375,31 @@ QVector<Transaction> CSVParser::ParseTransactionCSV(const QString& filePath)
                             break;
                         }
                     }
-                    newTransactions.push_back(Transaction(lineData[columnIndices.value(TRANSACTION_COLUMN_NAMES[0])].trimmed(), /*Acct*/
-                                                                                                                                lineData[columnIndices.value(TRANSACTION_COLUMN_NAMES[1])].trimmed(), /*Debit*/
-                                                          lineData[columnIndices.value(TRANSACTION_COLUMN_NAMES[2])].trimmed(), /*Credit*/
+
+
+                    const QDate newDate = ConvertTBKStringToDateTime(lineData[columnIndices.value(TRANSACTION_COLUMN_NAMES[0])].trimmed(), time).date();
+                    if(newDate != currentDate)
+                    {
+                        currentDate = newDate;
+                        time = QTime(23, 59);
+                    }
+                    else
+                    {
+                        time = time.addSecs(-60); // Go back in time one min
+                    }
+
+
+
+                    newTransactions.push_back(Transaction(QString("4330007"), /*Acct*/
+                                                          lineData[columnIndices.value(TRANSACTION_COLUMN_NAMES[2])].trimmed(), /*Delta*/
                                                           lineData[columnIndices.value(TRANSACTION_COLUMN_NAMES[3])].trimmed(), /*Balance*/
-                                                          QDateTime::fromString(lineData[columnIndices.value(TRANSACTION_COLUMN_NAMES[4])].trimmed()), /*Date*/
-                                                          lineData[columnIndices.value(TRANSACTION_COLUMN_NAMES[5])].trimmed() /*Desc*/
+
+
+                                                          // We need some way to give later times to matching dates based on how high they are in the sheet
+                                                          // We could start the time at 11:59p and cache its date, on next iteration if same, subtract 10m and then pass that to the convert func
+
+                                                          ConvertTBKStringToDateTime(lineData[columnIndices.value(TRANSACTION_COLUMN_NAMES[0])].trimmed(), time), /*Date*/
+                                                          lineData[columnIndices.value(TRANSACTION_COLUMN_NAMES[1])].trimmed() /*Desc*/
                                                           ));
                 }
 
@@ -393,11 +418,11 @@ void CSVParser::SaveCurrentTransactionsToCSV() const
     QFile legacyTrans(GetLegacyTransactionsCSVPath());
     legacyTrans.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
     QTextStream out(&legacyTrans);
-    out << "Acct,Debit,Credit,Balance,Date,Desc\n";
+    out << "Date,Description,Debit/Credit,Balance\n";
     for(const Transaction& tran : CurrentTransactions)
     {
         // Could be issues with Date format and future runs here... Will need to do some testing there
-        out << tran.Account << "," << tran.Debit << "," << tran.Credit << "," << tran.Balance << "," << tran.Date.toString() << "," << tran.Desc << "\n";
+        out << tran.Date.toString() << "," << tran.Desc << "," << tran.Delta << "," << tran.Balance << "\n";
     }
     legacyTrans.close();
 }
@@ -418,7 +443,10 @@ void CSVParser::SaveCurrentTotalsToCSV()
     QFile totalsCSV(GetCurrentTotalsCSVPath());
     totalsCSV.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
     QTextStream out(&totalsCSV);
-    out << "RawTotal,TotalBills,TotalDebt,TotalExtra\n";
+    out << "\"" << CurrentTotals.RawTotal << "\","
+        << "\"" << CurrentTotals.TotalBills << "\","
+        << "\"" << CurrentTotals.TotalDebt << "\","
+        << "\"" << CurrentTotals.TotalExtra << "\"\n";
     out << CurrentTotals.RawTotal << "," << CurrentTotals.TotalBills << "," << CurrentTotals.TotalDebt << "," << CurrentTotals.TotalExtra << "\n";
     totalsCSV.close();
 }
@@ -448,7 +476,7 @@ void CSVParser::LoadCurrentTotalsFromCSVIfExists()
             int lineCount = 0;
             while(!in.atEnd())
             {
-                QStringList lineData = in.readLine().split(",");
+                QStringList lineData = ParseCSVLine(in.readLine());
                 if(lineCount > 0)
                 {
                     CurrentTotals = Totals(lineData[0].trimmed(), lineData[1].trimmed(), lineData[2].trimmed(), lineData[3].trimmed());
@@ -458,6 +486,71 @@ void CSVParser::LoadCurrentTotalsFromCSVIfExists()
             }
         }
     }
+}
+
+void CSVParser::LoadTransactionsFromCSVIfExists()
+{
+    QFile legacyTrans(GetLegacyTransactionsCSVPath());
+    if(legacyTrans.exists())
+    {
+        if(legacyTrans.open(QIODevice::ReadOnly | QIODevice::Text))
+        {
+            QTextStream in(&legacyTrans);
+            int lineCount = 0;
+            while(!in.atEnd())
+            {
+                if(lineCount > 0)
+                {
+                    //QStringList lineData = in.readLine().split(",");
+                    QStringList lineData = ParseCSVLine(in.readLine());
+                    CurrentTransactions.push_back(Transaction(QString("4330007"), lineData[2].trimmed(), lineData[3].trimmed(), QDateTime::fromString(lineData[0].trimmed()), lineData[1].trimmed()));
+                }
+                ++lineCount;
+            }
+        }
+    }
+}
+
+void CSVParser::HandleTotalsRequested() const
+{
+    emit NotifyTotalsUpdated(CurrentTotals);
+}
+
+QStringList CSVParser::ParseCSVLine(const QString& line)
+{
+    QStringList result;
+    QRegularExpression regex(R"(\"([^\"]*)\"|([^,]+))"); // Matches either "quoted text" OR unquoted text until next comma
+    QRegularExpressionMatchIterator it = regex.globalMatch(line);
+    while(it.hasNext())
+    {
+        QRegularExpressionMatch match = it.next();
+        if(match.captured(1).length())
+        {
+            result << match.captured(1); // Quoted value
+        }
+        else
+        {
+            // Unquoted value
+            result << match.captured(2).trimmed();
+        }
+    }
+    return result;
+}
+
+QDateTime CSVParser::ConvertTBKStringToDateTime(const QString& date, const QTime& time)
+{
+    // Format: "Oct 02, 2025"
+    QString format = "MMM dd, yyyy";
+
+    QDate dateObj = QDate::fromString(date.trimmed(), format);
+    if (!dateObj.isValid())
+    {
+        qWarning("Failed to parse date: %s", qPrintable(date));
+        return QDateTime();
+    }
+
+    // Return QDateTime at midnight
+    return QDateTime(dateObj, time);
 }
 
 

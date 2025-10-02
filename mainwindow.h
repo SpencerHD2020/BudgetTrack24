@@ -6,11 +6,6 @@ namespace Ui
     class MainWindow;
 }
 
-namespace CSV
-{
-    struct Transaction;
-}
-
 namespace mainSpace
 {
 
@@ -19,7 +14,8 @@ namespace mainSpace
         NONE,
         TRANSACTIONS,
         BILLS,
-        CREDIT
+        CREDIT,
+        TOTALS
     };
 
     class MainWindow : public QMainWindow
@@ -41,6 +37,7 @@ namespace mainSpace
         void OnAddCCButtonClicked();
         void HandleCCAdded(const QString& cardName, const QString& owedAmmt);
         void ShowCCView();
+        void HandleTotalsUpdated(const CSV::Totals& totals);
 
     private:
         QString OpenFileDialog();

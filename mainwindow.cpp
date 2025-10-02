@@ -12,7 +12,7 @@ using namespace mainSpace;
 using namespace CSV;
 namespace
 {
-    constexpr int TRANSACTIONS_COL_LEN = 6;
+    constexpr int TRANSACTIONS_COL_LEN = 5;
 }
 
 MainWindow::MainWindow(QWidget *parent)
@@ -25,7 +25,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->UploadBankCSVButton, &QPushButton::clicked, this, &MainWindow::OnUploadBankCSVButtonClicked, Qt::UniqueConnection);
     connect(ui->AddBillsButton, &QPushButton::clicked, this, &MainWindow::OnAddBillsButtonClicked, Qt::UniqueConnection);
     connect(ui->ReviewBillsButton, &QPushButton::clicked, this, &MainWindow::ShowBillsView, Qt::UniqueConnection);
-    // TODO: We will want to query active bills on constuct (or on show breakdown whatever if not loaded) so that we can calculate for that step
+    // Lets Show the Totals View By Default - Which does not seem to currently have a button
+    connect(&CSVParserInstance, &CSVParser::NotifyTotalsUpdated, this, &MainWindow::HandleTotalsUpdated, Qt::UniqueConnection);
+    CSVParserInstance.HandleTotalsRequested();
 }
 
 MainWindow::~MainWindow()
@@ -54,16 +56,15 @@ QString MainWindow::OpenFileDialog()
 void MainWindow::PopulateDataTableWithTransactions(const QVector<Transaction>& transactions)
 {
     QStandardItemModel* model = new QStandardItemModel(transactions.length(), TRANSACTIONS_COL_LEN);
-    model->setHorizontalHeaderLabels({"Account", "Debit", "Credit", "Balance", "Date", "Description"});
+    model->setHorizontalHeaderLabels({"Account", "Delta", "Balance", "Date", "Description"});
     for(int row = 0; row < transactions.size(); ++row)
     {
         const Transaction& t = transactions[row];
         model->setItem(row, 0, new QStandardItem(t.Account));
-        model->setItem(row, 1, new QStandardItem(t.Debit));
-        model->setItem(row, 2, new QStandardItem(t.Credit));
-        model->setItem(row, 3, new QStandardItem(t.Balance));
-        model->setItem(row, 4, new QStandardItem(t.Date.toString()));
-        model->setItem(row, 5, new QStandardItem(t.Desc));
+        model->setItem(row, 1, new QStandardItem(t.Delta));
+        model->setItem(row, 2, new QStandardItem(t.Balance));
+        model->setItem(row, 3, new QStandardItem(t.Date.toString()));
+        model->setItem(row, 4, new QStandardItem(t.Desc));
     }
     ui->DataTableView->setModel(model);
     ui->DataTableView->resizeColumnsToContents();
@@ -159,3 +160,37 @@ void MainWindow::ShowCCView()
         ActivetableView = CurrentDataView_E::CREDIT;
     }
 }
+
+void MainWindow::HandleTotalsUpdated(const CSV::Totals& totals)
+{
+    QStandardItemModel* model = new QStandardItemModel(1, 4);
+    model->setHorizontalHeaderLabels({"Raw Total", "Bills Total", "Credit Card Total", "Total Extra"});
+    model->setItem(0, 0, new QStandardItem(totals.RawTotal));
+    model->setItem(0, 1, new QStandardItem(totals.TotalBills));
+    model->setItem(0, 2, new QStandardItem(totals.TotalDebt));
+    model->setItem(0, 3, new QStandardItem(totals.TotalExtra));
+    ui->DataTableView->setModel(model);
+    ui->DataTableView->resizeColumnsToContents();
+    ui->DataTableView->resizeRowsToContents();
+    connect(model, &QStandardItemModel::dataChanged, this, &MainWindow::HandleTableDataChanged, Qt::UniqueConnection);
+    ActivetableView = CurrentDataView_E::TOTALS;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

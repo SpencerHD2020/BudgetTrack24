@@ -12,18 +12,16 @@ namespace CSV
         Transaction()
         {}
 
-        Transaction(QString account, QString debit, QString credit, QString balance, QDateTime date, QString desc)
+        Transaction(QString account, QString delta, QString balance, QDateTime date, QString desc)
             : Account(account)
-            , Debit(debit)
-            , Credit(credit)
+            , Delta(delta)
             , Balance(balance)
             , Date(date)
             , Desc(desc)
         {}
 
         QString Account;
-        QString Debit;
-        QString Credit;
+        QString Delta;
         QString Balance;
         QDateTime Date;
         QString Desc;
@@ -31,8 +29,7 @@ namespace CSV
         bool operator==(const Transaction& other) const
         {
             return Account == other.Account &&
-                   Debit == other.Debit &&
-                   Credit == other.Credit &&
+                   Delta == other.Delta &&
                    Balance == other.Balance &&
                    Date == other.Date &&
                    Desc == other.Desc;
@@ -85,9 +82,10 @@ namespace CSV
         void AddCC(const QString& desc, const QString& ammt);
         QMap<int, QPair<QString, QString>> GetCCData();
         void HandleCCUpdated(const int index, const QString& name, const QString& ammnt);
+        void HandleTotalsRequested() const;
 
     signals:
-        void NotifyTotalsUpdated(const Totals& totals);
+        void NotifyTotalsUpdated(const Totals& totals) const;
 
     private:
         void EnsureAppDatafolderExists();
@@ -109,6 +107,9 @@ namespace CSV
         QString GetCurrentTotalsCSVPath() const;
         void CreateCurrentTotalsCSVIfNotExists();
         void LoadCurrentTotalsFromCSVIfExists();
+        void LoadTransactionsFromCSVIfExists();
+        QStringList ParseCSVLine(const QString& line);
+        QDateTime ConvertTBKStringToDateTime(const QString& date, const QTime& time);
 
         QVector<Transaction> CurrentTransactions;
         QMap<int, QPair<QString, QString>> CurrentBills;
