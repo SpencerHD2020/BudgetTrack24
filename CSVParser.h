@@ -28,10 +28,9 @@ namespace CSV
 
         bool operator==(const Transaction& other) const
         {
-            return Account == other.Account &&
-                   Delta == other.Delta &&
+            return Delta == other.Delta &&
                    Balance == other.Balance &&
-                   Date == other.Date &&
+                   Date.date() == other.Date.date() &&
                    Desc == other.Desc;
         }
         bool operator!=(const Transaction& other) const
@@ -110,7 +109,7 @@ namespace CSV
         void LoadCurrentTotalsFromCSVIfExists();
         void LoadTransactionsFromCSVIfExists();
         QStringList ParseCSVLine(const QString& line);
-        QDateTime ConvertTBKStringToDateTime(const QString& date, const QTime& time);
+        QDateTime ConvertTBKStringToDateTime(const QString& date, const QTime& time, QString format="MMM dd, yyyy");
 
         QVector<Transaction> CurrentTransactions;
         QMap<int, QPair<QString, QString>> CurrentBills;

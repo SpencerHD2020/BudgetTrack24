@@ -51,39 +51,95 @@ QVector<Transaction> CSVParser::HandleNewTransactionCSVAdded(const QString& file
     QVector<Transaction> newTransactions = ParseTransactionCSV(filePath); // Gets sorted in accending date order by this method
     if(!newTransactions.empty())
     {
+
+
+
+
+        /*
+         * TODO: SN
+        This Merge logic is tripping up because the bank likes to update balances on pending Transactions later......
+        Might be better to take the oldest date from new sheet, wipe any values from that date (from old sheet) that have a similiarly named entry (this will get messy) and merge them
+        Else stop trying to persist so many, but that was always kind of the point
+
+
+
+        */
+
+
+
+
+
+
         if(CreateEmptyLegacyTransactionsCSVIfNotExists()) // CSV Existed
         {
+
+            std::cout << "CSV Existed!" << std::endl;
+
+
             QVector<Transaction> legacyTrans = ParseTransactionCSV(GetLegacyTransactionsCSVPath());
             const int newStartingPoint = newTransactions.indexOf(legacyTrans.last());
             if(-1 != newStartingPoint)
             {
+                std::cout << "Found Last Old Transaction in NEW SHEET! Dumping Data for last OLD Transaction:" << std::endl;
+                std::cout << "Desc: " << legacyTrans.last().Desc.toStdString() << std::endl;
+                std::cout << "Balance: " << legacyTrans.last().Balance.toStdString() << std::endl;
+
                 // Delete everything up to and including this index from new transactions
                 newTransactions.remove(0, (newStartingPoint + 1));
-
-                // Combine the 2 vectors, if neccessary to cap at MAX_PERSISTED_TRANSACTIONS entries
-                CurrentTransactions.clear();
-                CurrentTransactions = legacyTrans;
-                CurrentTransactions.append(newTransactions);
-
-                if(CurrentTransactions.size() >= MAX_PERSISTED_TRANSACTIONS)
-                {
-                    CurrentTransactions.remove(0, (CurrentTransactions.size() - MAX_PERSISTED_TRANSACTIONS));
-                }
             }
             else
             {
-                // Gap or something???? Just blindly combine them for now - Take below logic maybe
-                const int newTransAmmnt = (newTransactions.size() > MAX_PERSISTED_TRANSACTIONS ? MAX_PERSISTED_TRANSACTIONS : newTransactions.size());
-                if(legacyTrans.size() >= newTransAmmnt)
+                std::cout << "FAILED to find Last Old Transaction in NEW SHEET! Dumping Data for last OLD Transaction:" << std::endl;
+                std::cout << "Desc: " << legacyTrans.last().Desc.toStdString() << std::endl;
+                std::cout << "Balance: " << legacyTrans.last().Balance.toStdString() << std::endl;
+
+
+                const QString desc = "TARGET CARD SRVC PAYMENT H 364871748";
+                const QString bal = "9,691.48";
+                //Transaction old;
+                for(const Transaction& tran : legacyTrans)
                 {
-                    legacyTrans.remove(0, newTransAmmnt);
+                    if(tran.Desc == desc && tran.Balance == bal)
+                    {
+                        //old = tran;
+                        std::cout << "OLD Balance: " << tran.Balance.toStdString() << std::endl;
+                        std::cout << "OLD Delta: " << tran.Delta.toStdString() << std::endl;
+                        std::cout << "OLD Date: " << tran.Date.toString().toStdString() << std::endl;
+                        std::cout << "OLD DESC: " << tran.Desc.toStdString() << std::endl;
+                        break;
+                    }
+                }
+                for(const Transaction& tran : newTransactions)
+                {
+                    if(tran.Desc == desc && tran.Balance == bal)
+                    {
+                        //old = tran;
+                        std::cout << "NEW Balance: " << tran.Balance.toStdString() << std::endl;
+                        std::cout << "NEW Delta: " << tran.Delta.toStdString() << std::endl;
+                        std::cout << "NEW Date: " << tran.Date.toString().toStdString() << std::endl;
+                        std::cout << "NEW DESC: " << tran.Desc.toStdString() << std::endl;
+                        break;
+                    }
                 }
 
-                // Make Current Transactions, Legacy Trans + New Trans
-                CurrentTransactions.clear();
-                CurrentTransactions = legacyTrans;
-                CurrentTransactions.append(newTransactions);
+
             }
+
+
+            // Make Current Transactions, Legacy Trans + New Trans
+            CurrentTransactions.clear();
+            CurrentTransactions = legacyTrans;
+            CurrentTransactions.append(newTransactions);
+            if(CurrentTransactions.size() >= MAX_PERSISTED_TRANSACTIONS)
+            {
+
+                std::cout << "After merging sheets, Persisted transactions exceeds max size, deleting oldest " << (CurrentTransactions.size() - MAX_PERSISTED_TRANSACTIONS) << " transactions." << std::endl;
+
+                CurrentTransactions.remove(0, (CurrentTransactions.size() - MAX_PERSISTED_TRANSACTIONS));
+            }
+
+
+
         }
         else // This is the first CSV ever uploaded to the application
         {
@@ -552,16 +608,29 @@ QStringList CSVParser::ParseCSVLine(const QString& line)
     return result;
 }
 
-QDateTime CSVParser::ConvertTBKStringToDateTime(const QString& date, const QTime& time)
+QDateTime CSVParser::ConvertTBKStringToDateTime(const QString& date, const QTime& time, QString format)
 {
-    // Format: "Oct 02, 2025"
-    QString format = "MMM dd, yyyy";
-
     QDate dateObj = QDate::fromString(date.trimmed(), format);
     if (!dateObj.isValid())
     {
         qWarning("Failed to parse date: %s", qPrintable(date));
-        return QDateTime();
+        dateObj = QDateTime::fromString(date.trimmed()).date();
+        if(!dateObj.isValid())
+        {
+            qWarning("Failed SECONDARY PARSING OF DATE ALSO!");
+            return QDateTime();
+        }
+        /*
+        const QString altFormat = "ddd MMM dd HH:mm:ss yyyy";
+        if(format != altFormat)
+        {
+            return ConvertTBKStringToDateTime(date, time, altFormat);
+        }
+        else
+        {
+            return QDateTime();
+        }
+        */
     }
 
     // Return QDateTime at midnight
