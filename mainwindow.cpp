@@ -27,6 +27,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->ReviewBillsButton, &QPushButton::clicked, this, &MainWindow::ShowBillsView, Qt::UniqueConnection);
     // Lets Show the Totals View By Default - Which does not seem to currently have a button
     connect(&CSVParserInstance, &CSVParser::NotifyTotalsUpdated, this, &MainWindow::HandleTotalsUpdated, Qt::UniqueConnection);
+    connect(ui->ViewTotalsButton, &QPushButton::clicked, this, &MainWindow::ShowTotalsView, Qt::UniqueConnection);
+
     CSVParserInstance.HandleTotalsRequested();
 }
 
@@ -174,6 +176,11 @@ void MainWindow::HandleTotalsUpdated(const CSV::Totals& totals)
     ui->DataTableView->resizeRowsToContents();
     connect(model, &QStandardItemModel::dataChanged, this, &MainWindow::HandleTableDataChanged, Qt::UniqueConnection);
     ActivetableView = CurrentDataView_E::TOTALS;
+}
+
+void MainWindow::ShowTotalsView()
+{
+    CSVParserInstance.HandleTotalsRequested();
 }
 
 

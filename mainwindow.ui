@@ -136,6 +136,25 @@
         </property>
        </widget>
       </item>
+      <item>
+       <widget class="QPushButton" name="ViewTotalsButton">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>100</width>
+          <height>20</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>View Totals</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </item>
     <item>
@@ -156,7 +175,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>25</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>

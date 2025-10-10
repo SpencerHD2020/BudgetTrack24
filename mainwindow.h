@@ -38,6 +38,7 @@ namespace mainSpace
         void HandleCCAdded(const QString& cardName, const QString& owedAmmt);
         void ShowCCView();
         void HandleTotalsUpdated(const CSV::Totals& totals);
+        void ShowTotalsView();
 
     private:
         QString OpenFileDialog();
