@@ -39,6 +39,7 @@ namespace mainSpace
         void ShowCCView();
         void HandleTotalsUpdated(const CSV::Totals& totals);
         void ShowTotalsView();
+        void ShowTransactionsView();
 
     private:
         QString OpenFileDialog();

@@ -28,6 +28,7 @@ MainWindow::MainWindow(QWidget *parent)
     // Lets Show the Totals View By Default - Which does not seem to currently have a button
     connect(&CSVParserInstance, &CSVParser::NotifyTotalsUpdated, this, &MainWindow::HandleTotalsUpdated, Qt::UniqueConnection);
     connect(ui->ViewTotalsButton, &QPushButton::clicked, this, &MainWindow::ShowTotalsView, Qt::UniqueConnection);
+    connect(ui->ViewTransactionsButton, &QPushButton::clicked, this, &MainWindow::ShowTransactionsView, Qt::UniqueConnection);
 
     CSVParserInstance.HandleTotalsRequested();
 }
@@ -182,6 +183,11 @@ void MainWindow::HandleTotalsUpdated(const CSV::Totals& totals)
 void MainWindow::ShowTotalsView()
 {
     CSVParserInstance.HandleTotalsRequested();
+}
+
+void MainWindow::ShowTransactionsView()
+{
+    PopulateDataTableWithTransactions(CSVParserInstance.GetCurrentTransactions());
 }
 
 

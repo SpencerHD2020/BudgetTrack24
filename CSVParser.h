@@ -83,6 +83,7 @@ namespace CSV
         QMap<int, QPair<QString, QString>> GetCCData();
         void HandleCCUpdated(const int index, const QString& name, const QString& ammnt);
         void HandleTotalsRequested() const;
+        QVector<Transaction> GetCurrentTransactions();
 
     signals:
         void NotifyTotalsUpdated(const Totals& totals) const;

@@ -422,6 +422,9 @@ QVector<Transaction> CSVParser::ParseTransactionCSV(const QString& filePath)
 
 void CSVParser::SaveCurrentTransactionsToCSV() const
 {
+
+    std::cout << "SAVING TRANSACTIONS!" << std::endl;
+
     QFile legacyTrans(GetLegacyTransactionsCSVPath());
     legacyTrans.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
     QTextStream out(&legacyTrans);
@@ -429,7 +432,7 @@ void CSVParser::SaveCurrentTransactionsToCSV() const
     for(const Transaction& tran : CurrentTransactions)
     {
         // Could be issues with Date format and future runs here... Will need to do some testing there
-        out << tran.Date.toString() << "," << tran.Desc << "," << tran.Delta << "," << tran.Balance << "\n";
+        out << "\"" << tran.Date.toString() << "\"," << "\"" << tran.Desc << "\"," << "\"" << tran.Delta << "\"," << "\"" << tran.Balance << "\"" << "\n";
     }
     legacyTrans.close();
 }
@@ -450,11 +453,11 @@ void CSVParser::SaveCurrentTotalsToCSV()
     QFile totalsCSV(GetCurrentTotalsCSVPath());
     totalsCSV.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
     QTextStream out(&totalsCSV);
+    out << "RawTotal,TotalBills,TotalDebt,TotalExtra\n";
     out << "\"" << CurrentTotals.RawTotal << "\","
         << "\"" << CurrentTotals.TotalBills << "\","
         << "\"" << CurrentTotals.TotalDebt << "\","
         << "\"" << CurrentTotals.TotalExtra << "\"\n";
-    out << CurrentTotals.RawTotal << "," << CurrentTotals.TotalBills << "," << CurrentTotals.TotalDebt << "," << CurrentTotals.TotalExtra << "\n";
     totalsCSV.close();
 }
 
@@ -558,6 +561,11 @@ QDateTime CSVParser::ConvertTBKStringToDateTime(const QString& date, const QTime
 
     // Return QDateTime at midnight
     return QDateTime(dateObj, time);
+}
+
+QVector<Transaction> CSVParser::GetCurrentTransactions()
+{
+    return CurrentTransactions;
 }
 
 
