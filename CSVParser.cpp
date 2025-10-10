@@ -294,7 +294,7 @@ void CSVParser::ReconfigureCurrentTotals()
     CurrentTotals.TotalDebt = QString::number(ccTotal);
 
     // Calculate total extra
-    CurrentTotals.TotalExtra = QString::number(CurrentTotals.RawTotal.toDouble() - (CurrentTotals.TotalBills.toDouble() + CurrentTotals.TotalDebt.toDouble()));
+    CurrentTotals.TotalExtra = QString::number(CurrentTotals.RawTotal.remove(',').toDouble() - (billTotal + ccTotal));
 
     // Update totals CSV file - Will need logic to load this in somewhere on boot most likely
     SaveCurrentTotalsToCSV();
