@@ -229,7 +229,7 @@ void CSVParser::CreateEmptyCCCSV()
 void CSVParser::HandleBillUpdated(const int index, const QString& name, const QString& ammnt)
 {
     // Update Local Object
-    std::cout << "BILL Updated: " << CurrentBills.value(index).first.toStdString() << " - " << CurrentBills.value(index).second.toStdString() << " .. Changed to: " << name.toStdString() << " - " << ammnt.toStdString() << std::endl;
+    std::cout << "BILL Updated[ " << index << "]: " << CurrentBills.value(index).first.toStdString() << " - " << CurrentBills.value(index).second.toStdString() << " .. Changed to: " << name.toStdString() << " - " << ammnt.toStdString() << std::endl;
     CurrentBills[index] = {name, ammnt};
 
     // Update CSV File - Realistically, it would be best to find the line in CSV and just replace that. But IK these files will never get
@@ -252,7 +252,7 @@ void CSVParser::HandleBillUpdated(const int index, const QString& name, const QS
 void CSVParser::HandleCCUpdated(const int index, const QString& name, const QString& ammnt)
 {
     // Update Local Object
-    std::cout << "CC Updated: " << CurrentCCData.value(index).first.toStdString() << " - " << CurrentCCData.value(index).second.toStdString() << " .. Changed to: " << name.toStdString() << " - " << ammnt.toStdString() << std::endl;
+    std::cout << "CC Updated[ " << index << "]: " << CurrentCCData.value(index).first.toStdString() << " - " << CurrentCCData.value(index).second.toStdString() << " .. Changed to: " << name.toStdString() << " - " << ammnt.toStdString() << std::endl;
     CurrentCCData[index] = {name, ammnt};
 
     // Update CSV File - Realistically, it would be best to find the line in CSV and just replace that. But IK these files will never get
@@ -279,17 +279,22 @@ void CSVParser::ReconfigureCurrentTotals()
 
     // Iterate Bills and find total Bills - CurrentBills QMap<int, QPair<QString, QString>>
     double billTotal = 0;
-    for(int billIndex = 0; billIndex < CurrentBills.count(); ++billIndex)
+    for(int billIndex = 1; billIndex <= CurrentBills.count(); ++billIndex)
     {
         billTotal += CurrentBills.value(billIndex).second.toDouble();
     }
     CurrentTotals.TotalBills = QString::number(billTotal);
 
     // Iterate CC and find total debt - QMap<int, QPair<QString, QString>> CurrentCCData;
+
+    std::cout << "Calculating CC Total" << std::endl;
+
     double ccTotal = 0;
-    for(int ccIndex = 0; ccIndex < CurrentCCData.count(); ++ccIndex)
+    for(int ccIndex = 1; ccIndex <= CurrentCCData.count(); ++ccIndex)
     {
+        std::cout << "Found Entry of Value: " << CurrentCCData.value(ccIndex).second.toDouble() << std::endl;
         ccTotal += CurrentCCData.value(ccIndex).second.toDouble();
+        std::cout << "Total: " << ccTotal << std::endl;
     }
     CurrentTotals.TotalDebt = QString::number(ccTotal);
 

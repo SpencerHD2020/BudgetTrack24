@@ -29,6 +29,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(&CSVParserInstance, &CSVParser::NotifyTotalsUpdated, this, &MainWindow::HandleTotalsUpdated, Qt::UniqueConnection);
     connect(ui->ViewTotalsButton, &QPushButton::clicked, this, &MainWindow::ShowTotalsView, Qt::UniqueConnection);
     connect(ui->ViewTransactionsButton, &QPushButton::clicked, this, &MainWindow::ShowTransactionsView, Qt::UniqueConnection);
+    connect(ui->AddCCButton, &QPushButton::clicked, this, &MainWindow::OnAddCCButtonClicked, Qt::UniqueConnection);
+    connect(ui->ReviewCCButton,  &QPushButton::clicked, this, &MainWindow::ShowCCView, Qt::UniqueConnection);
 
     CSVParserInstance.HandleTotalsRequested();
 }
