@@ -117,6 +117,7 @@ void MainWindow::HandleTableDataChanged(const QModelIndex& topLeft, const QModel
 
     QVariant column0Data = model->data(model->index(changedRow, 0));
     QVariant column1Data = model->data(model->index(changedRow, 1));
+    ui->DataTableView->closePersistentEditor(ui->DataTableView->currentIndex());
 
     if(CurrentDataView_E::BILLS == ActivetableView)
     {

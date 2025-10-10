@@ -34,11 +34,16 @@ CSVParser::CSVParser(QObject *parent)
     LoadCurrentTotalsFromCSVIfExists();
     LoadTransactionsFromCSVIfExists();
 
+    // Need to Load In Bills and CC Data
+
+
     // We should also Load Transactions on construct
 
     // Tech Debt, a very Hacky way to ensure we have good objects from the jump
-    //QMap<int, QPair<QString, QString>> bills = GetAllBills();
-    //QMap<int, QPair<QString, QString>> cc = GetCCData();
+    QMap<int, QPair<QString, QString>> bills = GetAllBills();
+    QMap<int, QPair<QString, QString>> cc = GetCCData();
+    Q_UNUSED(bills);
+    Q_UNUSED(cc);
 }
 
 QVector<Transaction> CSVParser::HandleNewTransactionCSVAdded(const QString& filePath)
@@ -241,6 +246,7 @@ void CSVParser::HandleBillUpdated(const int index, const QString& name, const QS
         }
         billsCSV.close();
     }
+    ReconfigureCurrentTotals();
 }
 
 void CSVParser::HandleCCUpdated(const int index, const QString& name, const QString& ammnt)
@@ -263,6 +269,7 @@ void CSVParser::HandleCCUpdated(const int index, const QString& name, const QStr
         }
         ccCSV.close();
     }
+    ReconfigureCurrentTotals();
 }
 
 void CSVParser::ReconfigureCurrentTotals()
